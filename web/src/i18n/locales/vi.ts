@@ -35,6 +35,7 @@ export const vi: Translations = {
     apiKeys: 'API Keys',
     audit: 'Traffic & Logs',
     routing: 'Routing Rules',
+    agentSetup: 'Thêm vào Agent',
   },
   tabs: {
     dashboard: {
@@ -50,6 +51,10 @@ export const vi: Translations = {
       title: 'Danh mục Models & Routing',
       subtitle:
         'Các models đang khả dụng được phục vụ cho Cursor, Claude Code, Cline và OpenAI SDK',
+    },
+    agentSetup: {
+      title: 'Thêm Model vào Agent',
+      subtitle: 'Chọn model và agent của bạn để lấy config sẵn sàng dán',
     },
     apiKeys: {
       title: 'Quản lý Khóa API Key',
@@ -80,7 +85,7 @@ export const vi: Translations = {
   },
   dashboard: {
     upstreamDiscoveryActive: 'Dynamic Upstream Discovery Active',
-    welcomeTitle: 'Antigravity Gateway Dashboard',
+    welcomeTitle: 'LLM Gateway Dashboard',
     welcomeDesc:
       'Quản lý Multi-Account Google Cloud Code, tự động xoay vòng tài khoản, khôi phục Thought Signature và phân phối tải cho Cursor, Claude Code, Cline.',
     viewAccounts: 'Xem tài khoản',
@@ -285,6 +290,35 @@ export const vi: Translations = {
     thinkingTag: 'Thinking',
     anthropicTag: 'Anthropic',
     geminiTag: 'Gemini Upstream',
+  },
+  agentSetup: {
+    title: 'Thêm Model vào Agent',
+    subtitle:
+      'Chọn model và agent của bạn để lấy config sẵn sàng dán — không cần tự nhớ endpoint hay tên trường.',
+    baseUrlLabel: 'Base URL của gateway',
+    baseUrlHint:
+      'Lấy từ địa chỉ bạn đang mở dashboard. Cần chính là URL mà agent của bạn sẽ gọi tới.',
+    apiKeyLabel: 'API Key',
+    apiKeyHint:
+      'Dùng key client, không dùng key admin. Key chỉ hiện một lần lúc tạo nên hãy lưu lại bản copy ở tab API Keys.',
+    modelTitle: 'Chọn model',
+    modelDesc: 'Bấm để bật/tắt. Model chọn sau cùng sẽ lên đầu danh sách.',
+    modelSearch: 'Tìm model...',
+    selectedCount: 'Đã chọn {count} model',
+    clearSelection: 'Bỏ chọn tất cả',
+    noModels: 'Không có model nào khớp tìm kiếm.',
+    agentTitle: 'Chọn agent',
+    agentDesc: 'Config sẽ đổi theo từng agent.',
+    agentSearch: 'Tìm agent...',
+    noAgents: 'Không có agent nào khớp tìm kiếm.',
+    configTitle: 'Config cho agent của bạn',
+    configDesc: 'Copy rồi dán vào đúng chỗ bên dưới.',
+    noModelWarning: 'Chưa chọn model — các chỗ này đang là placeholder.',
+    configOrder: 'Thứ tự trong config',
+    removeModel: 'Bỏ model này',
+    copyFailed: 'Không copy được. Hãy bôi đen và copy thủ công.',
+    disclaimer:
+      'Cấu hình bám theo từng phiên bản agent, tên trường có thể đã đổi. Nếu agent báo lỗi kết nối, hãy đối chiếu lại base URL và tên trường với tài liệu của agent đó.',
   },
   apiKeys: {
     titleWithCount: 'Quản lý API Keys ({count})',

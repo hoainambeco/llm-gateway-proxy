@@ -35,6 +35,7 @@ export interface Translations {
     apiKeys: string;
     audit: string;
     routing: string;
+    agentSetup: string;
   };
   tabs: {
     dashboard: {
@@ -58,6 +59,10 @@ export interface Translations {
       subtitle: string;
     };
     routing: {
+      title: string;
+      subtitle: string;
+    };
+    agentSetup: {
       title: string;
       subtitle: string;
     };
@@ -261,6 +266,31 @@ export interface Translations {
     thinkingTag: string;
     anthropicTag: string;
     geminiTag: string;
+  };
+  agentSetup: {
+    title: string;
+    subtitle: string;
+    baseUrlLabel: string;
+    baseUrlHint: string;
+    apiKeyLabel: string;
+    apiKeyHint: string;
+    modelTitle: string;
+    modelDesc: string;
+    modelSearch: string;
+    selectedCount: string;
+    clearSelection: string;
+    noModels: string;
+    agentTitle: string;
+    agentDesc: string;
+    agentSearch: string;
+    noAgents: string;
+    configTitle: string;
+    configDesc: string;
+    noModelWarning: string;
+    configOrder: string;
+    removeModel: string;
+    copyFailed: string;
+    disclaimer: string;
   };
   apiKeys: {
     titleWithCount: string;

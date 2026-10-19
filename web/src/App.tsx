@@ -13,6 +13,7 @@ import type {
   SystemStatus,
 } from './types';
 import { AccountsView } from './views/AccountsView';
+import { AgentSetupView } from './views/AgentSetupView';
 import { ApiKeysView } from './views/ApiKeysView';
 import { AuditLogsView } from './views/AuditLogsView';
 import { DashboardView } from './views/DashboardView';
@@ -107,6 +108,10 @@ export function App() {
       title: t('tabs.models.title'),
       subtitle: t('tabs.models.subtitle'),
     },
+    'agent-setup': {
+      title: t('tabs.agentSetup.title'),
+      subtitle: t('tabs.agentSetup.subtitle'),
+    },
     'api-keys': {
       title: t('tabs.apiKeys.title'),
       subtitle: t('tabs.apiKeys.subtitle'),
@@ -157,6 +162,12 @@ export function App() {
               {activeTab === 'routing' && <RoutingView />}
               {activeTab === 'models' && (
                 <ModelsView models={models} proxyPort={status?.port} />
+              )}
+              {activeTab === 'agent-setup' && (
+                <AgentSetupView
+                  models={models}
+                  defaultPort={status?.port ?? 8044}
+                />
               )}
               {activeTab === 'api-keys' && (
                 <ApiKeysView

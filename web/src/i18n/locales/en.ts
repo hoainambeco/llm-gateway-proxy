@@ -35,6 +35,7 @@ export const en: Translations = {
     apiKeys: 'API Keys',
     audit: 'Traffic & Logs',
     routing: 'Routing Rules',
+    agentSetup: 'Agent Setup',
   },
   tabs: {
     dashboard: {
@@ -49,6 +50,10 @@ export const en: Translations = {
       title: 'Model Catalog & Routing',
       subtitle:
         'Available models served for Cursor, Claude Code, Cline, and OpenAI SDK',
+    },
+    agentSetup: {
+      title: 'Agent Setup',
+      subtitle: 'Pick your models and client to get a ready-to-paste config',
     },
     apiKeys: {
       title: 'API Key Management',
@@ -80,7 +85,7 @@ export const en: Translations = {
   },
   dashboard: {
     upstreamDiscoveryActive: 'Dynamic Upstream Discovery Active',
-    welcomeTitle: 'Antigravity Gateway Dashboard',
+    welcomeTitle: 'LLM Gateway Dashboard',
     welcomeDesc:
       'Multi-account Google Cloud Code pooling, automatic rotation, Thought Signature recovery, and traffic routing for Cursor, Claude Code, and Cline.',
     viewAccounts: 'View Accounts',
@@ -286,6 +291,35 @@ export const en: Translations = {
     thinkingTag: 'Thinking',
     anthropicTag: 'Anthropic',
     geminiTag: 'Gemini Upstream',
+  },
+  agentSetup: {
+    title: 'Agent Setup',
+    subtitle:
+      'Pick your models and client to get a ready-to-paste config, without memorising endpoints or field names.',
+    baseUrlLabel: 'Gateway base URL',
+    baseUrlHint:
+      'Taken from the address you opened this dashboard on. This must be the URL your agent will reach.',
+    apiKeyLabel: 'API key',
+    apiKeyHint:
+      'Use a client key, not the admin key. Keys are shown only once at creation, so keep the copy from the API Keys tab.',
+    modelTitle: 'Choose models',
+    modelDesc: 'Click to toggle. The model you pick last leads the list.',
+    modelSearch: 'Search models...',
+    selectedCount: '{count} selected',
+    clearSelection: 'Clear all',
+    noModels: 'No models match your search.',
+    agentTitle: 'Choose an agent',
+    agentDesc: 'The generated config changes per agent.',
+    agentSearch: 'Search agents...',
+    noAgents: 'No agents match your search.',
+    configTitle: 'Config for your agent',
+    configDesc: 'Copy it, then paste it where the steps below say.',
+    noModelWarning: 'No model selected — these are placeholders.',
+    configOrder: 'Order in the config',
+    removeModel: 'Remove this model',
+    copyFailed: 'Copy failed. Select the text and copy manually.',
+    disclaimer:
+      'Configs follow each agent version and field names do shift between releases. If the agent fails to connect, re-check the base URL and field names against that agent docs.',
   },
   apiKeys: {
     titleWithCount: 'API Key Management ({count})',
