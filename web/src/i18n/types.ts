@@ -285,6 +285,7 @@ export interface Translations {
     agentSearch: string;
     noAgents: string;
     configTitle: string;
+    optionsTitle: string;
     configDesc: string;
     noModelWarning: string;
     configOrder: string;

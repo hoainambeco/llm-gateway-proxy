@@ -173,7 +173,7 @@ export class OpenAIOperations extends BaseProxyController {
    * The published catalog, shared by the list and the retrieve route so the two cannot
    * disagree about which models this gateway serves.
    */
-  private listOpenAICompatibleModelIds(): string[] {
+  public listOpenAICompatibleModelIds(): string[] {
     const config = getServerConfig();
     const onlyRawQuotaModels = config?.only_raw_quota_models ?? false;
     const dynamicModelIds = onlyRawQuotaModels

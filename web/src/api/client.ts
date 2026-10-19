@@ -187,6 +187,14 @@ export const api = {
     return res.data;
   },
 
+  getModelSpecs: async () => {
+    const res = await fetchJson<{
+      success: boolean;
+      data: Array<{ id: string; maxOutputTokens: number }>;
+    }>('/internal/model-specs');
+    return res.data;
+  },
+
   createApiKey: (data: {
     name: string;
     role?: 'admin' | 'client';

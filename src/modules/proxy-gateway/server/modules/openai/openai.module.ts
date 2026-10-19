@@ -10,6 +10,7 @@ import { IMAGE_QUOTA_REFRESH, OpenAIOperations } from './openai-operations.servi
 import { OpenAIChatController } from './openai-chat.controller';
 import { OpenAIMediaController } from './openai-media.controller';
 import { OpenAIModelsController } from './openai-models.controller';
+import { ModelSpecsController } from './model-specs-internal.controller';
 import { OpenAIService } from './openai.service';
 import { OpenAIChatCompletionService } from './chat/openai-chat-completion.service';
 import { OpenAIResponsesSessionService } from './responses/openai-responses-session.service';
@@ -20,6 +21,7 @@ import { OpenAIResponsesController } from './responses/openai-responses.controll
   imports: [AccountLeaseModule, FilesModule, GeminiModule, SharedServicesModule, DispatcherModule],
   controllers: [
     OpenAIModelsController,
+    ModelSpecsController,
     OpenAIChatController,
     OpenAIResponsesController,
     OpenAIResponsesStoreController,

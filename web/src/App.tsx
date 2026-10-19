@@ -13,7 +13,7 @@ import type {
   SystemStatus,
 } from './types';
 import { AccountsView } from './views/AccountsView';
-import { AgentSetupView } from './views/AgentSetupView';
+import { AgentSetupView, type ModelSpecEntry } from './views/AgentSetupView';
 import { ApiKeysView } from './views/ApiKeysView';
 import { AuditLogsView } from './views/AuditLogsView';
 import { DashboardView } from './views/DashboardView';
@@ -31,6 +31,7 @@ export function App() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [models, setModels] = useState<ModelEntry[]>([]);
+  const [modelSpecs, setModelSpecs] = useState<ModelSpecEntry[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditRecord[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -49,18 +50,20 @@ export function App() {
 
   const loadData = useCallback(async () => {
     try {
-      const [statusRes, accountsRes, modelsRes, apiKeysRes, auditRes] =
+      const [statusRes, accountsRes, modelsRes, apiKeysRes, auditRes, specsRes] =
         await Promise.allSettled([
           api.getSystemStatus(),
           api.getAccounts(),
           api.getModels(),
           api.getApiKeys(),
           api.getAuditRequests(),
+          api.getModelSpecs(),
         ]);
 
       if (statusRes.status === 'fulfilled') setStatus(statusRes.value);
       if (accountsRes.status === 'fulfilled') setAccounts(accountsRes.value);
       if (modelsRes.status === 'fulfilled') setModels(modelsRes.value);
+      if (specsRes.status === 'fulfilled') setModelSpecs(specsRes.value);
       if (apiKeysRes.status === 'fulfilled') setApiKeys(apiKeysRes.value);
       if (auditRes.status === 'fulfilled') setAuditLogs(auditRes.value);
     } catch (err) {
@@ -166,6 +169,7 @@ export function App() {
               {activeTab === 'agent-setup' && (
                 <AgentSetupView
                   models={models}
+                  modelSpecs={modelSpecs}
                   defaultPort={status?.port ?? 8044}
                 />
               )}

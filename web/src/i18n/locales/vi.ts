@@ -312,6 +312,7 @@ export const vi: Translations = {
     agentSearch: 'Tìm agent...',
     noAgents: 'Không có agent nào khớp tìm kiếm.',
     configTitle: 'Config cho agent của bạn',
+    optionsTitle: 'Chọn các trường sẽ có trong config',
     configDesc: 'Copy rồi dán vào đúng chỗ bên dưới.',
     noModelWarning: 'Chưa chọn model — các chỗ này đang là placeholder.',
     configOrder: 'Thứ tự trong config',

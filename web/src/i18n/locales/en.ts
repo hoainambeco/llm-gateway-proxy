@@ -313,6 +313,7 @@ export const en: Translations = {
     agentSearch: 'Search agents...',
     noAgents: 'No agents match your search.',
     configTitle: 'Config for your agent',
+    optionsTitle: 'Choose which fields go into the config',
     configDesc: 'Copy it, then paste it where the steps below say.',
     noModelWarning: 'No model selected — these are placeholders.',
     configOrder: 'Order in the config',

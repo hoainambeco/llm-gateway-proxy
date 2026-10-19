@@ -15,12 +15,20 @@ import { useToast } from '../components/Toast';
 import {
   AGENT_FAMILIES,
   AGENT_PRESETS,
+  defaultEnabled,
   normalizeBaseUrl,
   type AgentPreset,
 } from '../lib/agentPresets';
 
+export interface ModelSpecEntry {
+  id: string;
+  maxOutputTokens: number;
+}
+
 interface AgentSetupViewProps {
   models: ModelEntry[];
+  /** Output ceilings per model, when the server reported any. */
+  modelSpecs?: ModelSpecEntry[];
   /** Fallback origin when the dashboard is served from an unknown host. */
   defaultPort?: number;
 }
@@ -45,21 +53,55 @@ const originFromBrowser = (fallbackPort: number): string => {
 
 export const AgentSetupView: React.FC<AgentSetupViewProps> = ({
   models,
+  modelSpecs = [],
   defaultPort = 8044,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const toast = useToast();
 
   const [baseUrl, setBaseUrl] = useState(() => originFromBrowser(defaultPort));
   const [apiKey, setApiKey] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
   const [agentId, setAgentId] = useState(AGENT_PRESETS[0].id);
+  // Per-agent, so switching agents never silently reuses another one's picks.
+  const [enabledByAgent, setEnabledByAgent] = useState<
+    Record<string, string[]>
+  >(() =>
+    Object.fromEntries(
+      AGENT_PRESETS.map((preset) => [preset.id, [...defaultEnabled(preset)]]),
+    ),
+  );
   const [modelSearch, setModelSearch] = useState('');
   const [agentSearch, setAgentSearch] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
   const agent =
     AGENT_PRESETS.find((preset) => preset.id === agentId) ?? AGENT_PRESETS[0];
+
+  const enabledOptions = useMemo(
+    () => new Set(enabledByAgent[agent.id] ?? defaultEnabled(agent)),
+    [agent, enabledByAgent],
+  );
+
+  const toggleOption = (optionId: string) => {
+    setEnabledByAgent((current) => {
+      const next = new Set(current[agent.id] ?? defaultEnabled(agent));
+      if (next.has(optionId)) {
+        next.delete(optionId);
+      } else {
+        next.add(optionId);
+      }
+      return { ...current, [agent.id]: [...next] };
+    });
+  };
+
+  const outputLimits = useMemo(
+    () =>
+      Object.fromEntries(
+        modelSpecs.map((spec) => [spec.id, spec.maxOutputTokens]),
+      ),
+    [modelSpecs],
+  );
 
   const normalizedBase = normalizeBaseUrl(baseUrl);
   const chosenModels = useMemo(() => {
@@ -73,15 +115,21 @@ export const AgentSetupView: React.FC<AgentSetupViewProps> = ({
       .map((model) => model.id);
   }, [models, selected]);
 
-  const configText = useMemo(
-    () =>
-      agent.build({
-        baseUrl: normalizedBase,
-        apiKey: apiKey.trim() || '<your-api-key>',
-        models: chosenModels,
-      }),
-    [agent, normalizedBase, apiKey, chosenModels],
+  const values = useMemo(
+    () => ({
+      baseUrl: normalizedBase,
+      apiKey: apiKey.trim() || '<your-api-key>',
+      models: chosenModels,
+      outputLimits,
+    }),
+    [normalizedBase, apiKey, chosenModels, outputLimits],
   );
+
+  const configText = useMemo(() => {
+    const body = agent.build(values, enabledOptions);
+    const notes = agent.notes(values, enabledOptions, language);
+    return notes.length > 0 ? `${body}\n${notes.join('\n')}` : body;
+  }, [agent, values, enabledOptions, language]);
 
   const filteredModels = useMemo(
     () =>
@@ -351,6 +399,54 @@ export const AgentSetupView: React.FC<AgentSetupViewProps> = ({
           t('agentSetup.configTitle'),
           t('agentSetup.configDesc'),
         )}
+
+        {/* What goes into the snippet, chosen piece by piece. */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 mb-3">
+          <p className="text-[11px] text-zinc-500 mb-2">
+            {t('agentSetup.optionsTitle')}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+            {agent.options.map((option) => {
+              const on = enabledOptions.has(option.id);
+              const unavailable =
+                option.id === 'limit' && chosenModels.length === 0;
+              const optionHint =
+                language === 'vi' && option.hintVi ? option.hintVi : option.hint;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  disabled={unavailable}
+                  onClick={() => toggleOption(option.id)}
+                  title={optionHint}
+                  className={`flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors ${
+                    on ? 'bg-zinc-900' : 'opacity-60 hover:opacity-90'
+                  } ${unavailable ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  <span
+                    className={`shrink-0 mt-0.5 w-4 h-4 rounded border flex items-center justify-center ${
+                      on
+                        ? 'bg-emerald-500 border-emerald-500'
+                        : 'border-zinc-700'
+                    }`}
+                  >
+                    {on && (
+                      <Check className="w-3 h-3 text-zinc-950" strokeWidth={3} />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-mono text-[11px] text-zinc-200 break-all">
+                      {option.label}
+                    </span>
+                    <span className="block text-[10px] text-zinc-500">
+                      {optionHint}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="text-xs font-semibold text-zinc-200">
