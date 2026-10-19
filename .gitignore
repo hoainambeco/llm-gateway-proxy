@@ -64,6 +64,7 @@ __pycache__/
 .gemini/settings.json
 .codex/
 .agents/
+.agent/
 .agent/rules
 .agent/skills
 .kiro/
@@ -73,7 +74,10 @@ __pycache__/
 repomix-output.xml
 plans/
 .AI/
+AGENTS.md
+CLAUDE.md
 
 # Local worktrees and reference checkouts
 worktrees/
 external/
+

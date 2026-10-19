@@ -1,6 +1,8 @@
 import { Column, Entity, Index, PrimaryColumn } from "typeorm";
 
 @Entity("traffic_logs")
+@Index(["apiKeyId", "timestamp"])
+@Index(["model", "timestamp"])
 export class TrafficLog {
   @PrimaryColumn({ type: "varchar", length: 36 })
   id: string;

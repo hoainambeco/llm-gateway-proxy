@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { GraphQLModule } from "@nestjs/graphql";
+import { MercuriusDriver, MercuriusDriverConfig } from "@nestjs/mercurius";
 import { ApiKeyModule } from "../modules/api-key/api-key.module";
 import { DatabaseModule } from "../modules/database/database.module";
 import { ProxyModule } from "../modules/proxy-gateway/server/proxy.module";
@@ -12,7 +14,19 @@ import { OpenAIOAuthCallbackServer } from "../modules/cloud-account/services/Ope
 import { OAuthProviderLoginService } from "../modules/cloud-account/services/OAuthProviderLoginService";
 
 @Module({
-  imports: [DatabaseModule, ApiKeyModule, ProxyModule, RoutingModule],
+  imports: [
+    DatabaseModule,
+    ApiKeyModule,
+    ProxyModule,
+    RoutingModule,
+    GraphQLModule.forRoot<MercuriusDriverConfig>({
+      driver: MercuriusDriver,
+      autoSchemaFile: true,
+      graphiql: false,
+      path: "/graphql",
+      context: (req, reply) => ({ req, reply }),
+    }),
+  ],
   controllers: [
     AccountManagementController,
     RoutingController,

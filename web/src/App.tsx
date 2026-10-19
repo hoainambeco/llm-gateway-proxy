@@ -15,6 +15,7 @@ import type {
 import { AccountsView } from './views/AccountsView';
 import { AgentSetupView, type ModelSpecEntry } from './views/AgentSetupView';
 import { ApiKeysView } from './views/ApiKeysView';
+import { AnalyticsView } from './views/AnalyticsView';
 import { AuditLogsView } from './views/AuditLogsView';
 import { DashboardView } from './views/DashboardView';
 import { LoginView } from './views/LoginView';
@@ -119,6 +120,10 @@ export function App() {
       title: t('tabs.apiKeys.title'),
       subtitle: t('tabs.apiKeys.subtitle'),
     },
+    analytics: {
+      title: t('tabs.analytics.title'),
+      subtitle: t('tabs.analytics.subtitle'),
+    },
     audit: {
       title: t('tabs.audit.title'),
       subtitle: t('tabs.audit.subtitle'),
@@ -180,6 +185,7 @@ export function App() {
                   onReload={loadData}
                 />
               )}
+              {activeTab === 'analytics' && <AnalyticsView />}
               {activeTab === 'audit' && (
                 <AuditLogsView
                   logs={auditLogs}

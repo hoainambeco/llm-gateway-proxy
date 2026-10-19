@@ -33,6 +33,7 @@ export interface Translations {
     accounts: string;
     models: string;
     apiKeys: string;
+    analytics: string;
     audit: string;
     routing: string;
     agentSetup: string;
@@ -51,6 +52,10 @@ export interface Translations {
       subtitle: string;
     };
     apiKeys: {
+      title: string;
+      subtitle: string;
+    };
+    analytics: {
       title: string;
       subtitle: string;
     };
@@ -352,6 +357,39 @@ export interface Translations {
       status: string;
       latency: string;
       tokens: string;
+    };
+  };
+  analytics: {
+    title: string;
+    description: string;
+    exportCsv: string;
+    allApiKeys: string;
+    totalTokens: string;
+    promptTokens: string;
+    completionTokens: string;
+    totalRequests: string;
+    successRate: string;
+    estimatedCost: string;
+    avgLatency: string;
+    topModels: string;
+    byModel: string;
+    byApiKey: string;
+    rank: string;
+    model: string;
+    tokens: string;
+    requests: string;
+    share: string;
+    cost: string;
+    apiKey: string;
+    noData: string;
+    presets: {
+      oneHour: string;
+      twentyFourHours: string;
+      sevenDays: string;
+      thirtyDays: string;
+      ninetyDays: string;
+      oneYear: string;
+      custom: string;
     };
   };
 }

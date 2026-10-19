@@ -15,6 +15,9 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ logs, onReload, is
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filteredLogs = logs.filter((log) => {
+    if (log.endpoint?.includes('/graphql')) {
+      return false;
+    }
     if (filterModel && !log.model?.toLowerCase().includes(filterModel.toLowerCase())) {
       return false;
     }
@@ -31,7 +34,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ logs, onReload, is
         <div>
           <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
             <Activity className="w-5 h-5 text-purple-400" />
-            {t('audit.titleWithCount', { count: logs.length })}
+            {t('audit.titleWithCount', { count: filteredLogs.length })}
           </h2>
           <p className="text-xs text-zinc-400">
             {t('audit.description')}

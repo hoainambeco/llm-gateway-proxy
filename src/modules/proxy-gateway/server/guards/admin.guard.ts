@@ -8,6 +8,7 @@ import {
   Optional,
   UnauthorizedException,
 } from "@nestjs/common";
+import { GqlExecutionContext } from "@nestjs/graphql";
 import { getServerConfig } from "../../../../server/server-config";
 import {
   extractApiKeyToken,
@@ -39,10 +40,16 @@ export class AdminGuard implements CanActivate {
       return true;
     }
 
-    const request = context
+    let request = context
       .switchToHttp()
-      .getRequest<{ headers: RequestHeaders; ip?: string; socket?: any; raw?: any }>();
-    const clientToken = extractApiKeyToken(request.headers);
+      .getRequest<{ headers?: RequestHeaders; ip?: string; socket?: any; raw?: any }>();
+
+    if (!request || !request.headers) {
+      const gqlContext = GqlExecutionContext.create(context).getContext();
+      request = gqlContext?.req || gqlContext?.request || gqlContext?.reply?.request;
+    }
+
+    const clientToken = extractApiKeyToken(request?.headers);
 
     const config = getServerConfig();
     const masterKey = (

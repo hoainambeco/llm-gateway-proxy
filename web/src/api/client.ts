@@ -6,10 +6,49 @@ import type {
   ModelEntry,
   RoutingConfig,
   SystemStatus,
+  TokenUsageStatsResponse,
 } from '../types';
 import { getAdminKey } from './keyStorage';
 
 const BASE_URL = '';
+
+export async function graphqlRequest<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
+  const savedKey = getAdminKey() || '';
+  const res = await fetch(`${BASE_URL}/graphql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(savedKey ? { Authorization: `Bearer ${savedKey}` } : {}),
+    },
+    body: JSON.stringify({ query, variables }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    let message = `GraphQL request failed: ${res.status} ${res.statusText}`;
+    try {
+      const parsed = JSON.parse(errorText);
+      if (parsed.errors && parsed.errors.length > 0) {
+        message = parsed.errors[0].message || message;
+      } else if (parsed.message) {
+        message = parsed.message;
+      }
+    } catch {
+      // not JSON
+    }
+    throw new Error(message);
+  }
+
+  const json = await res.json();
+  if (json.errors && json.errors.length > 0) {
+    throw new Error(json.errors[0].message || 'GraphQL error');
+  }
+
+  return json.data;
+}
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const savedKey = getAdminKey() || '';
@@ -236,5 +275,71 @@ export const api = {
     } catch {
       return [];
     }
+  },
+
+  getTokenStats: async (filter: {
+    range: string;
+    from?: number;
+    to?: number;
+    apiKeyId?: string;
+  }) => {
+    const res = await graphqlRequest<{ tokenUsageStats: TokenUsageStatsResponse }>(
+      `query GetTokenStats($filter: TokenStatsFilterInput!) {
+        tokenUsageStats(filter: $filter) {
+          range
+          from
+          to
+          summary {
+            totalTokens
+            promptTokens
+            completionTokens
+            totalRequests
+            successfulRequests
+            failedRequests
+            avgLatencyMs
+            estimatedCostUsd
+          }
+          timeSeries {
+            timestamp
+            label
+            promptTokens
+            completionTokens
+            totalTokens
+            requestCount
+            estimatedCostUsd
+          }
+          byApiKey {
+            apiKeyId
+            name
+            keyPreview
+            promptTokens
+            completionTokens
+            totalTokens
+            requestCount
+            percentage
+            estimatedCostUsd
+          }
+          byModel {
+            model
+            promptTokens
+            completionTokens
+            totalTokens
+            requestCount
+            percentage
+            estimatedCostUsd
+          }
+          topModels {
+            rank
+            model
+            totalTokens
+            requestCount
+            percentage
+            estimatedCostUsd
+          }
+        }
+      }`,
+      { filter },
+    );
+    return res.tokenUsageStats;
   },
 };

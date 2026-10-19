@@ -9,6 +9,7 @@ import {
   Sparkles,
   Route,
   Plug,
+  BarChart3,
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 
@@ -19,6 +20,7 @@ export type TabType =
   | 'models'
   | 'agent-setup'
   | 'api-keys'
+  | 'analytics'
   | 'audit';
 
 interface SidebarProps {
@@ -41,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, statu
       icon: Plug,
     },
     { id: 'api-keys' as TabType, label: t('navigation.apiKeys'), icon: Key },
+    { id: 'analytics' as TabType, label: t('navigation.analytics'), icon: BarChart3 },
     { id: 'audit' as TabType, label: t('navigation.audit'), icon: Activity },
   ];
 

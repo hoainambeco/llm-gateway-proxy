@@ -1,8 +1,9 @@
-import React from 'react';
-import type { Account, SystemStatus } from '../types';
-import { Users, Cpu, Key, Activity, CheckCircle2, AlertTriangle, ArrowUpRight, Zap } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import type { Account, SystemStatus, TokenUsageStatsResponse } from '../types';
+import { Users, Cpu, Key, Activity, CheckCircle2, AlertTriangle, ArrowUpRight, Zap, BarChart3, TrendingUp, DollarSign } from 'lucide-react';
 import type { TabType } from '../components/Sidebar';
 import { useTranslation } from '../i18n';
+import { api } from '../api/client';
 
 interface DashboardViewProps {
   status: SystemStatus | null;
@@ -25,6 +26,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const totalAccounts = accounts.length;
   const activeAccounts = accounts.filter((a) => a.is_healthy && !a.is_cooldown).length;
   const cooldownAccounts = accounts.filter((a) => a.is_cooldown).length;
+
+  const [tokenStats, setTokenStats] = useState<TokenUsageStatsResponse | null>(null);
+
+  useEffect(() => {
+    api.getTokenStats({ range: 'TWENTY_FOUR_HOURS' })
+      .then((res) => setTokenStats(res))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -143,6 +152,101 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {t('dashboard.uptimeStrategy', { strategy: status?.routing_strategy || 'round-robin' })}
           </p>
         </div>
+      </div>
+
+      {/* 24-Hour Token Consumption Summary Widget */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400">
+              <BarChart3 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-zinc-100">
+                {t('analytics.presets.twentyFourHours')} Token Consumption
+              </h3>
+              <p className="text-xs text-zinc-400">
+                Processed tokens, request volume, and estimated costs across active providers
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('analytics')}
+            className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold group transition-colors"
+          >
+            <span>View Full Analytics</span>
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+          <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800/80">
+            <div className="text-xs text-zinc-400 mb-1 flex items-center justify-between">
+              <span>{t('analytics.totalTokens')} (24h)</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            </div>
+            <div className="text-xl font-bold font-mono text-zinc-100">
+              {tokenStats ? tokenStats.summary.totalTokens.toLocaleString() : '0'}
+            </div>
+            <div className="text-[11px] text-zinc-500 mt-1">
+              Prompt: {tokenStats ? tokenStats.summary.promptTokens.toLocaleString() : '0'} • Comp: {tokenStats ? tokenStats.summary.completionTokens.toLocaleString() : '0'}
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800/80">
+            <div className="text-xs text-zinc-400 mb-1 flex items-center justify-between">
+              <span>{t('analytics.totalRequests')} (24h)</span>
+              <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+            </div>
+            <div className="text-xl font-bold font-mono text-zinc-100">
+              {tokenStats ? tokenStats.summary.totalRequests.toLocaleString() : '0'}
+            </div>
+            <div className="text-[11px] text-zinc-500 mt-1">
+              {tokenStats ? tokenStats.summary.successfulRequests : 0} succeeded • {tokenStats ? tokenStats.summary.failedRequests : 0} errors
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800/80">
+            <div className="text-xs text-zinc-400 mb-1 flex items-center justify-between">
+              <span>{t('analytics.estimatedCost')} (24h)</span>
+              <DollarSign className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+            <div className="text-xl font-bold font-mono text-amber-400">
+              ${tokenStats ? tokenStats.summary.estimatedCostUsd.toFixed(4) : '0.0000'}
+            </div>
+            <div className="text-[11px] text-zinc-500 mt-1">
+              Avg latency: {tokenStats ? `${tokenStats.summary.avgLatencyMs}ms` : '0ms'}
+            </div>
+          </div>
+        </div>
+
+        {/* Top 3 Models Mini Progress */}
+        {tokenStats && tokenStats.topModels.length > 0 && (
+          <div className="pt-4 border-t border-zinc-800/80">
+            <div className="text-xs font-medium text-zinc-400 mb-2.5">
+              Top Active Models Today
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {tokenStats.topModels.slice(0, 3).map((m) => (
+                <div key={m.model} className="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800/60">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-zinc-300 font-medium truncate max-w-[140px]" title={m.model}>
+                      {m.model}
+                    </span>
+                    <span className="font-mono text-emerald-400 text-[11px]">{m.percentage}%</span>
+                  </div>
+                  <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-1.5 bg-emerald-500 rounded-full"
+                      style={{ width: `${Math.min(100, Math.max(m.percentage, 2))}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quota Highlights Table */}

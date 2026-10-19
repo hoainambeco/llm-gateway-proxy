@@ -81,6 +81,86 @@ export interface CompleteUpstreamAttemptInput {
   status?: number;
 }
 
+export type TimeRangePresetType =
+  | 'ONE_HOUR'
+  | 'TWENTY_FOUR_HOURS'
+  | 'SEVEN_DAYS'
+  | 'THIRTY_DAYS'
+  | 'NINETY_DAYS'
+  | 'ONE_YEAR'
+  | 'CUSTOM';
+
+export interface TokenStatsFilter {
+  range: TimeRangePresetType;
+  from?: number;
+  to?: number;
+  apiKeyId?: string;
+}
+
+export interface TokenStatsSummaryResult {
+  totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  avgLatencyMs: number;
+  estimatedCostUsd: number;
+}
+
+export interface TimeSeriesDataPointResult {
+  timestamp: number;
+  label: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  estimatedCostUsd: number;
+}
+
+export interface ApiKeyTokenUsageResult {
+  apiKeyId: string;
+  name: string;
+  keyPreview: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  percentage: number;
+  estimatedCostUsd: number;
+}
+
+export interface ModelTokenUsageResult {
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  percentage: number;
+  estimatedCostUsd: number;
+}
+
+export interface TopModelRankingResult {
+  rank: number;
+  model: string;
+  totalTokens: number;
+  requestCount: number;
+  percentage: number;
+  estimatedCostUsd: number;
+}
+
+export interface TokenUsageStatsResult {
+  range: string;
+  from: number;
+  to: number;
+  summary: TokenStatsSummaryResult;
+  timeSeries: TimeSeriesDataPointResult[];
+  byApiKey: ApiKeyTokenUsageResult[];
+  byModel: ModelTokenUsageResult[];
+  topModels: TopModelRankingResult[];
+}
+
+
 export const TrafficAuditListInputSchema = z.object({
   accountId: z.string().trim().max(256).optional(),
   from: z.number().int().nonnegative().optional(),

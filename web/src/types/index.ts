@@ -71,7 +71,8 @@ export interface RoutingConfig {
 export interface ApiKeyItem {
   id: string;
   name: string;
-  key: string;
+  key?: string;
+  keyPreview?: string;
   role: 'admin' | 'client';
   isActive: boolean;
   allowedAccountIds?: string[] | null;
@@ -109,3 +110,76 @@ export interface AuthValidateResult {
   isMaster?: boolean;
   error?: string;
 }
+
+export type TimeRangePresetType =
+  | 'ONE_HOUR'
+  | 'TWENTY_FOUR_HOURS'
+  | 'SEVEN_DAYS'
+  | 'THIRTY_DAYS'
+  | 'NINETY_DAYS'
+  | 'ONE_YEAR'
+  | 'CUSTOM';
+
+export interface TokenStatsSummary {
+  totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  avgLatencyMs: number;
+  estimatedCostUsd: number;
+}
+
+export interface TimeSeriesDataPoint {
+  timestamp: number;
+  label: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  estimatedCostUsd: number;
+}
+
+export interface ApiKeyTokenUsage {
+  apiKeyId: string;
+  name: string;
+  keyPreview: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  percentage: number;
+  estimatedCostUsd: number;
+}
+
+export interface ModelTokenUsage {
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  percentage: number;
+  estimatedCostUsd: number;
+}
+
+export interface TopModelRanking {
+  rank: number;
+  model: string;
+  totalTokens: number;
+  requestCount: number;
+  percentage: number;
+  estimatedCostUsd: number;
+}
+
+export interface TokenUsageStatsResponse {
+  range: string;
+  from: number;
+  to: number;
+  summary: TokenStatsSummary;
+  timeSeries: TimeSeriesDataPoint[];
+  byApiKey: ApiKeyTokenUsage[];
+  byModel: ModelTokenUsage[];
+  topModels: TopModelRanking[];
+}
+

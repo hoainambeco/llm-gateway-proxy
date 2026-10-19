@@ -24,7 +24,11 @@ const AUXILIARY_ROUTE_PATTERNS = [
   /^\/v1\/(?:responses|chat\/completions)\/.+/iu,
 ];
 
-const SYSTEM_ROUTE_PATTERNS = [/^\/healthz?\/?$/iu, /^\/internal(?:\/|$)/iu];
+const SYSTEM_ROUTE_PATTERNS = [
+  /^\/healthz?\/?$/iu,
+  /^\/internal(?:\/|$)/iu,
+  /^\/graphql(?:\/|$)/iu,
+];
 
 /**
  * Resolves the durable audit category at the transport boundary. Keeping this
