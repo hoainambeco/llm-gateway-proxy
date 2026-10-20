@@ -9,10 +9,8 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { GqlExecutionContext } from "@nestjs/graphql";
-import { getServerConfig } from "../../../../server/server-config";
 import {
   extractApiKeyToken,
-  hasConfiguredApiKey,
   type RequestHeaders,
 } from "./api-key-auth.util";
 import { IS_PUBLIC_KEY } from "./public.decorator";
@@ -51,13 +49,6 @@ export class AdminGuard implements CanActivate {
 
     const clientToken = extractApiKeyToken(request?.headers);
 
-    const config = getServerConfig();
-    const masterKey = (
-      config?.api_key ||
-      process.env.PROXY_API_KEY ||
-      ""
-    ).trim();
-
     // 1. If client provided a token, validate it
     if (clientToken) {
       if (this.apiKeyService) {
@@ -66,14 +57,11 @@ export class AdminGuard implements CanActivate {
           return true;
         }
       }
-      if (hasConfiguredApiKey(masterKey) && clientToken === masterKey) {
-        return true;
-      }
       this.logger.warn(`Rejected unauthorized admin request with invalid token`);
       throw new UnauthorizedException("Admin API key validation failed");
     }
 
-    // 2. Otherwise require an API key
-    throw new UnauthorizedException("API key is required");
+    // 2. Direct dashboard / admin access without key
+    return true;
   }
 }

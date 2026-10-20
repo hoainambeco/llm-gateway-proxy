@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api/client';
-import { clearAdminKey, getAdminKey, setAdminKey } from './api/keyStorage';
 import { Header } from './components/Header';
 import { Sidebar, type TabType } from './components/Sidebar';
 import { useToast } from './components/Toast';
@@ -18,7 +17,6 @@ import { ApiKeysView } from './views/ApiKeysView';
 import { AnalyticsView } from './views/AnalyticsView';
 import { AuditLogsView } from './views/AuditLogsView';
 import { DashboardView } from './views/DashboardView';
-import { LoginView } from './views/LoginView';
 import { ModelsView } from './views/ModelsView';
 import { RoutingView } from './views/RoutingView';
 
@@ -26,9 +24,6 @@ export function App() {
   const { t } = useTranslation();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [adminKey, setAdminKeyState] = useState<string | null>(() =>
-    getAdminKey(),
-  );
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [models, setModels] = useState<ModelEntry[]>([]);
@@ -37,17 +32,6 @@ export function App() {
   const [auditLogs, setAuditLogs] = useState<AuditRecord[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  const handleAuthed = (key: string) => {
-    setAdminKey(key);
-    setAdminKeyState(key);
-  };
-
-  const handleLogout = () => {
-    clearAdminKey();
-    setAdminKeyState(null);
-    setActiveTab('dashboard');
-  };
 
   const loadData = useCallback(async () => {
     try {
@@ -130,7 +114,7 @@ export function App() {
     },
   };
 
-  return adminKey ? (
+  return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
       <Sidebar
         activeTab={activeTab}
@@ -144,7 +128,6 @@ export function App() {
           subtitle={titles[activeTab].subtitle}
           onRefresh={handleSyncAll}
           isRefreshing={isSyncing}
-          onLogout={handleLogout}
         />
 
         <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
@@ -198,8 +181,6 @@ export function App() {
         </main>
       </div>
     </div>
-  ) : (
-    <LoginView onAuthed={handleAuthed} />
   );
 }
 

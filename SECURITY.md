@@ -7,9 +7,9 @@ worth far more than the code:
 
 | File                      | Contents                                                   | Consequence if leaked                                                                                                                                               |
 | ------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accounts.json`           | Google OAuth refresh tokens, one per linked account        | Full, renewable access to those Google accounts' Antigravity quota                                                                                                  |
-| `.env`                    | `ANTIGRAVITY_OAUTH_CLIENT_ID` / `_SECRET`, `PROXY_API_KEY` | Credential pair revoked once reported; master key grants admin API access                                                                                           |
-| `data/antigravity.sqlite` | Client API key hashes, traffic audit metadata              | Key hashes are not usable as credentials; audit rows store metadata only (model, status, token counts, error message) — request/response bodies are never persisted |
+| `accounts.json`           | Google OAuth refresh tokens, one per linked account | Full, renewable access to those Google accounts' Antigravity quota                                                                                                  |
+| `.env`                    | `ANTIGRAVITY_OAUTH_CLIENT_ID` / `_SECRET`           | Credential pair revoked once reported                                                                                                                               |
+| `data/antigravity.sqlite` | Client API key hashes, traffic audit metadata       | Key hashes are not usable as credentials; audit rows store metadata only (model, status, token counts, error message) — request/response bodies are never persisted |
 
 All three are listed in `.gitignore` and `.dockerignore`. Never commit them, never paste
 them into an issue, and never attach a database file to a bug report without deleting the
@@ -19,9 +19,7 @@ them into an issue, and never attach a database file to a bug report without del
 
 Only the SHA-256 digest of a client API key is stored. A key is shown once, when it is
 created, and cannot be recovered afterwards from the web UI, the CLI, or the database --
-if one is lost, delete it and create a replacement. The master key in `PROXY_API_KEY` is
-the exception: it lives in `.env` in the clear, because the proxy has to present it to
-itself, and it is compared in constant time.
+if one is lost, delete it and create a replacement.
 
 ## Supported versions
 
@@ -49,11 +47,9 @@ These are documented rather than fixed, because the project assumes a trusted,
 single-operator deployment. Treat them as reasons not to expose the proxy to the public
 internet, not as vulnerabilities to report:
 
-- **Open Mode.** With no `PROXY_API_KEY` and no keys in the database, the proxy accepts
-  every request unauthenticated. It binds to `127.0.0.1` in that state; an explicit
-  `HOST=0.0.0.0` is refused at startup unless `ALLOW_OPEN_MODE_NON_LOOPBACK=1` is set, in
-  which case the proxy publishes an unauthenticated proxy over your Google accounts to the
-  whole network. See "Exposing the proxy" in the README.
+- **Model API Authentication.** Model execution endpoints strictly require a valid client API key
+  stored in SQLite. Keyless requests are rejected with HTTP 401. Only loopback requests to the
+  model catalog (`GET /v1/models`) are permitted unauthenticated for editor agent discovery.
 - **No rate limiting.** Nothing throttles API key guesses or request volume. This is
   deliberate: the proxy fronts long-running agent sessions, where a throttle interrupts
   real work more often than it stops an attacker.

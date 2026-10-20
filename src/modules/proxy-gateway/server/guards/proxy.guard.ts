@@ -1,4 +1,3 @@
-import { hashApiKey, hashesEqual } from '@/modules/api-key/api-key-hash';
 import { ApiKeyService } from '@/modules/api-key/api-key.service';
 import {
   CanActivate,
@@ -9,7 +8,6 @@ import {
   Optional,
   UnauthorizedException,
 } from '@nestjs/common';
-import { getServerConfig } from '../../../../server/server-config';
 import { setCurrentAuditAllowedAccountIds } from '../../audit/traffic-audit-context';
 import {
   buildAuthErrorBody,
@@ -17,7 +15,6 @@ import {
 } from '../common/auth-error-envelope';
 import {
   extractApiKeyToken,
-  hasConfiguredApiKey,
   type RequestHeaders,
 } from './api-key-auth.util';
 
@@ -41,11 +38,6 @@ export class ProxyGuard implements CanActivate {
 
     // 1. If ApiKeyService is available, use dynamic multi-key validation
     if (this.apiKeyService) {
-      if (!this.apiKeyService.hasConfiguredProtection()) {
-        // Open Mode (no keys configured)
-        return true;
-      }
-
       const clientToken = extractApiKeyToken(request.headers);
       const surface = resolveAuthErrorSurface(request);
 
@@ -116,26 +108,11 @@ export class ProxyGuard implements CanActivate {
       throw new UnauthorizedException(buildAuthErrorBody(surface, message));
     }
 
-    // 2. Fallback to static config check if ApiKeyService is not registered
-    const config = getServerConfig();
-    const apiKey = config?.api_key;
-    const clientToken = extractApiKeyToken(request.headers);
-
-    if (hasConfiguredApiKey(apiKey)) {
-      if (
-        clientToken !== null &&
-        hashesEqual(hashApiKey(clientToken), hashApiKey(apiKey))
-      ) {
-        return true;
-      }
-    } else {
-      return true;
-    }
-
+    // 2. Fallback if ApiKeyService is not registered: reject all model calls
     this.logger.warn(`Rejected unauthorized request from ${request.ip}`);
     const surface = resolveAuthErrorSurface(request);
     throw new UnauthorizedException(
-      buildAuthErrorBody(surface, 'API key validation failed'),
+      buildAuthErrorBody(surface, 'API key is required'),
     );
   }
 }

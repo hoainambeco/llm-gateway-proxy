@@ -161,7 +161,6 @@ cp .env.example .env
 Key variables:
 - `ANTIGRAVITY_OAUTH_CLIENT_ID` / `ANTIGRAVITY_OAUTH_CLIENT_SECRET`: **Required.** See [OAuth Client Credentials](#oauth-client-credentials) below.
 - `PORT`: Port to listen on (default `8045`).
-- `PROXY_API_KEY`: (Optional) Master secret key with full admin and proxy access. If omitted, the server uses dynamic API keys in SQLite.
 - `SQLITE_DB_PATH`: Path to SQLite database file (default `./data/antigravity.sqlite`).
 - `ACCOUNTS_FILE`: Path to `accounts.json` (default `./accounts.json`).
 
@@ -271,37 +270,18 @@ The proxy fronts your own Google accounts. Anyone who can reach the port can spe
 quota, read the model catalog, and — with an admin key — read the audit log, which stores
 every prompt and response in full.
 
-### Open Mode
+### Authentication & Security
 
-With no `PROXY_API_KEY` in `.env` **and** no key in the SQLite database, the proxy accepts
-every request unauthenticated. This is the default on a fresh clone, and it is convenient
-for local use only.
-
-To limit the damage, the bind address is chosen for you when `HOST` is unset:
-
-| State | Default bind | Reachable from |
-| --- | --- | --- |
-| Open Mode (no key anywhere) | `127.0.0.1` | this machine only |
-| An API key exists | `0.0.0.0` | the network |
-
-**Setting `HOST=0.0.0.0` yourself overrides that protection.** Do it in Open Mode and you
-publish an unauthenticated gateway to your Google accounts to everything that can route to
-the host. The server logs a loud warning when it detects exactly that, but it will still
-start — it cannot tell a deliberate LAN deployment from a mistake.
+- **Dashboard Access:** By default, accessing the Web UI (`http://localhost:8045/`) and internal management APIs does not require a login key. You can view connected accounts, routing rules, and manage API keys directly.
+- **Model API Authentication:** Every request to proxy model endpoints (OpenAI, Anthropic, Gemini, etc.) **strictly requires** a valid dynamic API key. Keyless or unauthorized model requests are rejected immediately with HTTP `401 Unauthorized`.
+- **Model Catalog Discovery:** Only local loopback discovery requests (`GET /v1/models` from `127.0.0.1`) are permitted unauthenticated to facilitate model discovery by local editors and extensions.
 
 ### Before putting it on a network
 
-1. Set `PROXY_API_KEY` in `.env`, or create a key: `npm run api-key`.
-2. Confirm the startup log does not mention Open Mode.
-3. Keep it behind a reverse proxy with TLS. The proxy speaks plain HTTP, so without one
-   your API keys cross the network in cleartext.
-4. Add rate limiting at that reverse proxy if you need it. The proxy itself has none by
-   design, so nothing throttles an attacker guessing API keys — set the limit high enough
-   that streaming agent sessions are not cut off.
-5. Do not expose it to the public internet. There is no rate limiting and `enableCors()`
-   runs with no allowlist — both deliberate, so that long agent sessions are not throttled
-   and browser-based agents are not blocked by origin. See [SECURITY.md](SECURITY.md) for
-   the full list of accepted weaknesses.
+1. Generate client API keys in the Web UI (under "API Keys" tab) or via CLI: `npm run api-key create "Client Name"`.
+2. Keep it behind a reverse proxy with TLS if accessing over untrusted networks. Plain HTTP sends keys across the network in cleartext.
+3. Add rate limiting at your reverse proxy if needed. The proxy does not throttle requests by design.
+4. Do not expose administrative ports freely to the public internet. See [SECURITY.md](SECURITY.md) for details.
 
 Client API keys are stored only as SHA-256 digests. A key is displayed once, when it is
 created, and cannot be recovered afterwards — if you lose one, delete it and create a new
@@ -317,17 +297,12 @@ Build and run:
 docker build -t llm-gateway-proxy .
 
 # Run mounting accounts.json and SQLite data volume.
-# -p 127.0.0.1:8045:8045 keeps the port on this machine. The image sets HOST=0.0.0.0
-# because a container must bind that to be reachable at all, which means the proxy can no
-# longer keep itself on loopback in Open Mode -- so bind the published port yourself, and
-# drop the 127.0.0.1 prefix only once PROXY_API_KEY is set. See "Exposing the proxy".
 docker run -d \
   --name llm-gateway-proxy \
   -p 127.0.0.1:8045:8045 \
   -v $(pwd)/accounts.json:/app/data/accounts.json \
   -v $(pwd)/data:/app/data \
   -e PORT=8045 \
-  -e PROXY_API_KEY=sk-change-me \
   llm-gateway-proxy
 ```
 
@@ -341,7 +316,7 @@ docker run -d \
 
 ## Client Configuration Examples
 
-Generate a unique API key for each client first (or use `PROXY_API_KEY` from `.env`):
+Generate a unique API key for each client first (via Web UI or CLI):
 ```bash
 npm run api-key create "My Client"
 # Returns: sk-ag-xxxxxxxxxxxxxxxxxxxxxxxx
@@ -359,7 +334,7 @@ npm run api-key create "My Client"
 3. Scroll down to **OpenAI API Key**:
    - Turn ON **Override OpenAI Base URL**.
    - **Base URL:** `http://localhost:8045/v1`
-   - **API Key:** Enter your generated key (`sk-ag-...`) or `PROXY_API_KEY`.
+   - **API Key:** Enter your generated key (`sk-ag-...`).
 4. Click **Verify** to test connection.
 
 ---
