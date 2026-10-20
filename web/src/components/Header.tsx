@@ -1,4 +1,4 @@
-import { Globe, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Globe, RefreshCw, ShieldCheck } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from '../i18n';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -8,7 +8,6 @@ interface HeaderProps {
   subtitle?: string;
   onRefresh?: () => void;
   isRefreshing?: boolean;
-  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,7 +15,6 @@ export const Header: React.FC<HeaderProps> = ({
   subtitle,
   onRefresh,
   isRefreshing = false,
-  onLogout,
 }) => {
   const { t } = useTranslation();
 
@@ -55,17 +53,6 @@ export const Header: React.FC<HeaderProps> = ({
           <Globe className="w-3.5 h-3.5 text-teal-400" />
           <span>0.0.0.0</span>
         </div>
-
-        {onLogout && (
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-all"
-            title={t('common.logout')}
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>{t('common.logout')}</span>
-          </button>
-        )}
       </div>
     </header>
   );

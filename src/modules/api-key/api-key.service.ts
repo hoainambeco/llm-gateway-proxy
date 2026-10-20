@@ -114,19 +114,14 @@ export class ApiKeyService implements OnModuleInit, OnModuleDestroy {
 
 
   /**
-   * Check if any key protection is active (either master key in env/config OR keys in DB)
+   * Check if any key protection is active (keys in DB cache)
    */
   hasConfiguredProtection(): boolean {
-    const config = getServerConfig();
-    const envKey = config?.api_key || process.env.PROXY_API_KEY;
-    if (hasConfiguredApiKey(envKey)) {
-      return true;
-    }
     return this.keyCache.size > 0;
   }
 
   /**
-   * Synchronously validate a client token against Master Key and in-memory cache
+   * Synchronously validate a client token against in-memory cache
    */
   validateKeySync(token: string | null | undefined): ApiKeyValidationResult {
     if (!token || typeof token !== "string") {
@@ -140,24 +135,7 @@ export class ApiKeyService implements OnModuleInit, OnModuleDestroy {
 
     const tokenHash = hashApiKey(trimmed);
 
-    // 1. Check Master Key from config or environment
-    const config = getServerConfig();
-    const masterKey = (
-      config?.api_key ||
-      process.env.PROXY_API_KEY ||
-      ""
-    ).trim();
-    if (masterKey && hashesEqual(hashApiKey(masterKey), tokenHash)) {
-      return {
-        valid: true,
-        isMaster: true,
-        role: "admin",
-        keyName: "Master Key (.env)",
-        allowedAccountIds: null,
-      };
-    }
-
-    // 2. Check in-memory cache, keyed by digest
+    // Check in-memory cache, keyed by digest
     const keyEntity = this.keyCache.get(tokenHash);
     if (!keyEntity) {
       return { valid: false, reason: "invalid_key" };
@@ -228,7 +206,7 @@ export class ApiKeyService implements OnModuleInit, OnModuleDestroy {
    */
   async validateAdminKey(token: string | null | undefined): Promise<boolean> {
     const result = await this.validateKey(token);
-    return result.valid && (result.isMaster || result.role === "admin");
+    return result.valid && result.role === "admin";
   }
 
   private recordLastUsed(id: string): void {

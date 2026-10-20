@@ -47,7 +47,7 @@ Dự án cho phép bạn sử dụng các tài khoản **Google Cloud Code / Ant
    +-------------------------------------------------------------+
    |                LLM Gateway Proxy (Fastify)                  |
    |                                                             |
-   |  [Guards & Auth] -> Xác thực PROXY_API_KEY (nếu có)         |
+   |  [Guards & Auth] -> Xác thực API Key động (SQLite)          |
    |  [Mappers]       -> Chuẩn hóa Request sang định dạng Google |
    |  [Thought Store] -> Quản lý & phục hồi thought signatures   |
    |  [Account Lease] -> Xoay vòng tài khoản & Cooldown 429      |
@@ -239,7 +239,6 @@ Mở file `.env` để tuỳ chỉnh các tham số:
 | `ANTIGRAVITY_OAUTH_CLIENT_KEY` | `antigravity_enterprise` | Tuỳ chọn. Chọn client nào active lúc khởi động. Gõ sai key thì hệ thống lặng lẽ dùng client đầu tiên. |
 | `PORT` | `8045` | Cổng HTTP mà proxy sẽ lắng nghe. |
 | `HOST` | `0.0.0.0` | Địa chỉ host binding (`0.0.0.0` cho phép truy cập từ mạng LAN/Docker). |
-| `PROXY_API_KEY` | *(trống)* | Master Key tuỳ chọn. Nếu đặt, key này luôn có quyền cao nhất (Admin + Proxy). Nếu để trống, hệ thống sử dụng các API Key linh hoạt lưu trong SQLite. |
 | `SQLITE_DB_PATH` | `./data/antigravity.sqlite` | Đường dẫn file SQLite database lưu danh sách API Key. |
 | `ACCOUNTS_FILE` | `./accounts.json` | Đường dẫn đến file lưu trữ danh sách tài khoản. |
 | `ROUTING_STRATEGY` | `balance` | Chế độ xoay vòng: `balance` (xoay đều), `cache-first` (ưu tiên context cache), `performance-first`. |
@@ -313,7 +312,7 @@ npm run api-key create "Cursor của Nam"
 3. Cuộn xuống mục **OpenAI API Key**:
    - Bật gạt **Override OpenAI Base URL**.
    - **Base URL:** `http://localhost:8045/v1`
-   - **API Key:** Nhập API Key bạn vừa tạo (`sk-ag-...`) hoặc `PROXY_API_KEY`.
+   - **API Key:** Nhập API Key bạn vừa tạo (`sk-ag-...`) từ Dashboard hoặc CLI.
 4. Nhấn **Verify** để kiểm tra kết nối (hiển thị tích xanh là thành công).
 
 ---

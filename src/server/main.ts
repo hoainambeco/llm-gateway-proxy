@@ -114,22 +114,6 @@ function isAddressInUseError(error: unknown): boolean {
   return Reflect.get(error, 'code') === 'EADDRINUSE';
 }
 
-// A bind address the machine cannot be reached on from the network. Anything else --
-// 0.0.0.0, ::, a LAN address -- exposes the port, which matters while the proxy is
-// unauthenticated (see the Open Mode warning in bootstrapNestServer).
-function isLoopbackHost(host: string): boolean {
-  const normalized = host
-    .trim()
-    .toLowerCase()
-    .replace(/^\[|\]$/g, '');
-  return (
-    normalized === 'localhost' ||
-    normalized === '::1' ||
-    normalized === '::ffff:127.0.0.1' ||
-    normalized.startsWith('127.')
-  );
-}
-
 async function cleanupFailedServerStart() {
   if (!app) {
     return;
@@ -212,9 +196,6 @@ export async function bootstrapNestServer(
     );
 
     const apiKeyService = app.get(ApiKeyService);
-    const hasDynamicKeys = apiKeyService.hasConfiguredProtection();
-    const apiKeyConfigured =
-      hasConfiguredApiKey(config.api_key) || hasDynamicKeys;
     app.enableCors();
 
     const webDistPath = path.resolve(process.cwd(), 'web/dist');
@@ -227,40 +208,12 @@ export async function bootstrapNestServer(
       logger.info(`Web UI static dashboard mounted from ${webDistPath}`);
     }
 
-    const defaultHost = apiKeyConfigured ? '0.0.0.0' : '127.0.0.1';
+    const defaultHost = '0.0.0.0';
     const listenHost = process.env.HOST || defaultHost;
 
-    // Open Mode (no master key, no key in the database) accepts every request
-    // unauthenticated. The default host keeps that state on loopback, but an explicit
-    // HOST overrides it, so an operator could publish an unauthenticated proxy over their
-    // own Google accounts without noticing. Refuse to start unless the operator explicitly
-    // acknowledges the risk with ALLOW_OPEN_MODE_NON_LOOPBACK=1.
-    if (!apiKeyConfigured && !isLoopbackHost(listenHost)) {
-      if (process.env.ALLOW_OPEN_MODE_NON_LOOPBACK !== '1') {
-        throw new Error(
-          'Refusing to start: the proxy has no PROXY_API_KEY and no API key in the ' +
-            `database (Open Mode), yet HOST=${listenHost} binds beyond loopback. Every ` +
-            'request would be accepted with no authentication and would spend your linked ' +
-            "accounts' quota. Set PROXY_API_KEY, create a key with `npm run api-key`, or " +
-            'unset HOST. If you really intend to run an unauthenticated proxy on a public ' +
-            'interface, set ALLOW_OPEN_MODE_NON_LOOPBACK=1.',
-        );
-      }
-      logger.warn(
-        '='.repeat(70) +
-          `\nOPEN MODE ON A PUBLIC INTERFACE: no PROXY_API_KEY and no API key in the` +
-          `\ndatabase, yet HOST=${listenHost} binds beyond loopback. Every request to this` +
-          `\nport is accepted with no authentication and spends your linked Google accounts'` +
-          `\nquota. ALLOW_OPEN_MODE_NON_LOOPBACK=1 is set, so startup proceeds.\n` +
-          '='.repeat(70),
-      );
-    } else if (!apiKeyConfigured) {
-      logger.warn(
-        `Open Mode: no API key configured, so requests are unauthenticated. Bound to ` +
-          `${listenHost} (loopback only). Create a key with \`npm run api-key\` before ` +
-          `exposing this port.`,
-      );
-    }
+    logger.info(
+      `Starting server on ${listenHost}:${port}. Model requests strictly require dynamic API keys.`,
+    );
 
     await app.listen(port, listenHost);
     const openAIOperations = app.get(OpenAIOperations);
@@ -269,20 +222,11 @@ export async function bootstrapNestServer(
       app.getHttpServer(),
       {
         isAuthorized: (request) => {
-          if (apiKeyService && apiKeyService.hasConfiguredProtection()) {
+          if (apiKeyService) {
             const clientToken = extractApiKeyToken(request.headers);
             return apiKeyService.validateKeySync(clientToken).valid;
           }
-          const configuredApiKey = getConfiguredApiKey();
-          const clientToken = extractApiKeyToken(request.headers);
-          return (
-            !hasConfiguredApiKey(configuredApiKey) ||
-            (clientToken !== null &&
-              hashesEqual(
-                hashApiKey(clientToken),
-                hashApiKey(configuredApiKey),
-              ))
-          );
+          return false;
         },
         streamRequest: async (request) => {
           const body = parseResponsesRequestBody(request);
@@ -404,10 +348,6 @@ export function updateNestServerAccountLeaseOAuthHealth(
   return app
     .get(AccountLeaseService)
     .updateAccountOAuthHealth(accountId, oauthHealth);
-}
-
-function getConfiguredApiKey(): string | undefined {
-  return getServerConfig()?.api_key;
 }
 
 export async function getNestServerStatus(): Promise<{
