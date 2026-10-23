@@ -246,6 +246,16 @@ export class TrafficAuditService {
         .take(limit)
         .skip(offset);
 
+      if (input?.from !== undefined) {
+        qb.andWhere('log.timestamp >= :from', { from: input.from });
+      }
+      if (input?.to !== undefined) {
+        qb.andWhere('log.timestamp <= :to', { to: input.to });
+      }
+      if (input?.apiKeyId) {
+        qb.andWhere('log.apiKeyId = :apiKeyId', { apiKeyId: input.apiKeyId });
+      }
+
       const [logs, total] = await qb.getManyAndCount();
 
       const rows = logs.map((log) => ({

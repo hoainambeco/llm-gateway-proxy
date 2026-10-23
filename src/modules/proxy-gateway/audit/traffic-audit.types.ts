@@ -163,6 +163,7 @@ export interface TokenUsageStatsResult {
 
 export const TrafficAuditListInputSchema = z.object({
   accountId: z.string().trim().max(256).optional(),
+  apiKeyId: z.string().uuid().optional(),
   from: z.number().int().nonnegative().optional(),
   limit: z.number().int().min(1).max(200).default(50),
   model: z.string().trim().optional(),
