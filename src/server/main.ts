@@ -196,6 +196,31 @@ export async function bootstrapNestServer(
     );
 
     const apiKeyService = app.get(ApiKeyService);
+
+    // Resolver-level guards only run for fields resolved by that resolver, so an
+    // introspection-only query such as `{ __typename }` would otherwise reach
+    // /graphql unauthenticated. Guard the whole route instead.
+    fastifyAdapter.getInstance().addHook('onRequest', async (request, reply) => {
+      if (request.method === 'OPTIONS') return;
+      const pathname = (request.raw.url ?? request.url).split('?')[0];
+      if (pathname !== '/graphql') return;
+
+      const token = extractApiKeyToken(request.headers);
+      if (token && (await apiKeyService.validateAdminKey(token))) return;
+
+      if (token) {
+        logger.warn('Rejected unauthorized GraphQL request with invalid token');
+      } else {
+        logger.warn('Rejected GraphQL request without a token');
+      }
+      reply.code(401).send({
+        statusCode: 401,
+        message: token
+          ? 'Admin API key validation failed'
+          : 'Admin API key is required',
+      });
+    });
+
     app.enableCors();
 
     const webDistPath = path.resolve(process.cwd(), 'web/dist');

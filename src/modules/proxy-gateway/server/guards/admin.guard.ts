@@ -61,7 +61,8 @@ export class AdminGuard implements CanActivate {
       throw new UnauthorizedException("Admin API key validation failed");
     }
 
-    // 2. Direct dashboard / admin access without key
-    return true;
+    // 2. No token at all: admin endpoints are never open, even on localhost.
+    this.logger.warn("Rejected admin request without a token");
+    throw new UnauthorizedException("Admin API key is required");
   }
 }
