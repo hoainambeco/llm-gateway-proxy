@@ -31,10 +31,15 @@ describe('internal api', () => {
     it('filters audit rows by api key and time range', async () => {
       const byKey = await apiFetch(
         server.baseUrl,
-        '/internal/audit/requests?apiKeyId=22222222-2222-4222-8222-222222222222',
+        // The window covers both seeded rows but excludes "now", so audit rows
+        // written later by other tests (e.g. the 503 proxy request with this
+        // same client key id) cannot leak into the expectation.
+        '/internal/audit/requests?apiKeyId=22222222-2222-4222-8222-222222222222' +
+          '&from=1790812800000&to=1790816400000',
         { token: server.adminKey },
       );
       expect(byKey.status).toBe(200);
+      expect(byKey.body.total).toBe(1);
       expect(byKey.body.data.map((r: any) => r.requestId)).toEqual([
         'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
       ]);
