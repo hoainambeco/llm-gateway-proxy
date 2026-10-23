@@ -24,6 +24,10 @@ describe('isValidProxyUrl', () => {
     ['ftp://proxy.example.com', 'ftp protocol'],
     ['javascript:void(0)', 'javascript pseudo-scheme'],
     ['http://', 'scheme without host (URL constructor throws)'],
+    ['socks://', 'socks scheme without host (parses with empty hostname)'],
+    ['socks4://', 'socks4 scheme without host'],
+    ['socks5://', 'socks5 scheme without host'],
+    ['socks5://:1080', 'socks5 with port but no host'],
     ['not a url at all', 'garbage text'],
     ['   ', 'whitespace only'],
   ])('rejects %s (%s)', (url) => {
