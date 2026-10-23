@@ -1,3 +1,4 @@
+import { calculateRetryDelay, sleep } from '../../../antigravity/retry-utils';
 import { UpstreamRequestError } from '../../common/exceptions/upstream-request.exception';
 import {
   ProxyRetryAccountLeaseService,
@@ -5,8 +6,19 @@ import {
   ProxyRetryService,
 } from './proxy-retry.service';
 
+jest.mock('../../../antigravity/retry-utils', () => ({
+  calculateRetryDelay: jest.fn(),
+  sleep: jest.fn(),
+}));
+
 describe('ProxyRetryService', () => {
+  const mockedCalculateRetryDelay = calculateRetryDelay as jest.MockedFunction<
+    typeof calculateRetryDelay
+  >;
+  const mockedSleep = sleep as jest.MockedFunction<typeof sleep>;
+
   let logger: ProxyRetryLogger;
+  let logMock: jest.Mock;
   let service: ProxyRetryService;
 
   function makeService(lease: Partial<ProxyRetryAccountLeaseService> = {}): ProxyRetryService {
@@ -18,7 +30,10 @@ describe('ProxyRetryService', () => {
   }
 
   beforeEach(() => {
-    logger = { log: jest.fn(), warn: jest.fn() };
+    mockedCalculateRetryDelay.mockReturnValue(2500);
+    mockedSleep.mockResolvedValue(undefined);
+    logMock = jest.fn();
+    logger = { log: logMock, warn: jest.fn() };
     service = makeService();
   });
 
@@ -73,6 +88,34 @@ describe('ProxyRetryService', () => {
         markAsForbidden: true,
         markAsRateLimited: false,
       });
+    });
+  });
+
+  describe('waitBeforeRetry', () => {
+    it('returns immediately on the first attempt without sleeping or logging', async () => {
+      await service.waitBeforeRetry(0, 3, 'Gemini', false);
+
+      expect(mockedCalculateRetryDelay).not.toHaveBeenCalled();
+      expect(mockedSleep).not.toHaveBeenCalled();
+      expect(logger.log).not.toHaveBeenCalled();
+    });
+
+    it('returns immediately when backoff should be skipped', async () => {
+      await service.waitBeforeRetry(2, 3, 'Gemini', true);
+
+      expect(mockedCalculateRetryDelay).not.toHaveBeenCalled();
+      expect(mockedSleep).not.toHaveBeenCalled();
+      expect(logger.log).not.toHaveBeenCalled();
+    });
+
+    it('logs the attempt and sleeps for the jittered backoff delay', async () => {
+      await service.waitBeforeRetry(2, 3, 'Gemini', false);
+
+      expect(mockedCalculateRetryDelay).toHaveBeenCalledWith(1);
+      expect(mockedSleep).toHaveBeenCalledWith(2500);
+      expect(logger.log).toHaveBeenCalledTimes(1);
+      expect(logMock.mock.calls[0][0]).toContain('retry 3/3');
+      expect(logMock.mock.calls[0][0]).toContain('Gemini');
     });
   });
 
