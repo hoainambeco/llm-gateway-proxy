@@ -386,6 +386,8 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
       return {
         id: account.id,
         email: account.email,
+        name: account.name ?? null,
+        is_active: account.is_active !== false,
         provider: account.provider,
         auth_type: account.auth_type,
         project_id: account.token?.project_id,
@@ -916,7 +918,7 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
   async refreshDiscoveredProviderModels(): Promise<void> {
     if (!this.providerModelDiscovery) return;
     const nonGoogle = Array.from(this.allAccounts.values()).filter(
-      (acc) => acc.provider && acc.provider !== 'google',
+      (acc) => acc.provider && acc.provider !== 'google' && acc.is_active !== false,
     );
     if (nonGoogle.length === 0) {
       this.discoveredProviderModels.clear();
