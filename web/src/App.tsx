@@ -8,7 +8,6 @@ import { useTranslation } from './i18n';
 import type {
   Account,
   ApiKeyItem,
-  AuditRecord,
   ModelEntry,
   SystemStatus,
 } from './types';
@@ -36,19 +35,17 @@ export function App() {
   const [models, setModels] = useState<ModelEntry[]>([]);
   const [modelSpecs, setModelSpecs] = useState<ModelSpecEntry[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
-      const [statusRes, accountsRes, modelsRes, apiKeysRes, auditRes, specsRes] =
+      const [statusRes, accountsRes, modelsRes, apiKeysRes, specsRes] =
         await Promise.allSettled([
           api.getSystemStatus(),
           api.getAccounts(),
           api.getModels(),
           api.getApiKeys(),
-          api.getAuditRequests(),
           api.getModelSpecs(),
         ]);
 
@@ -57,7 +54,6 @@ export function App() {
       if (modelsRes.status === 'fulfilled') setModels(modelsRes.value);
       if (specsRes.status === 'fulfilled') setModelSpecs(specsRes.value);
       if (apiKeysRes.status === 'fulfilled') setApiKeys(apiKeysRes.value);
-      if (auditRes.status === 'fulfilled') setAuditLogs(auditRes.value);
     } catch (err) {
       console.error('Error loading data:', err);
     } finally {
@@ -251,13 +247,7 @@ export function App() {
                 />
               )}
               {activeTab === 'analytics' && <AnalyticsView />}
-              {activeTab === 'audit' && (
-                <AuditLogsView
-                  logs={auditLogs}
-                  onReload={loadData}
-                  isLoading={isSyncing}
-                />
-              )}
+              {activeTab === 'audit' && <AuditLogsView />}
             </>
           )}
         </main>

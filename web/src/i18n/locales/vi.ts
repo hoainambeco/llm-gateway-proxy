@@ -394,6 +394,10 @@ export const vi: Translations = {
       'Theo dõi tất cả các request đi qua proxy trong thời gian thực, phục vụ giám sát và gỡ lỗi.',
     refreshBtn: 'Làm mới logs',
     filterPlaceholder: 'Lọc theo model (vd: gemini, claude)...',
+    timeFrom: 'Từ',
+    timeTo: 'Đến',
+    allApiKeys: 'Tất cả API Keys',
+    clearFilters: 'Xóa bộ lọc',
     filters: {
       all: 'Tất cả',
       success: '2xx Success',

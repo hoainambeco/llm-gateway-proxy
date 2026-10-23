@@ -358,6 +358,10 @@ export interface Translations {
     description: string;
     refreshBtn: string;
     filterPlaceholder: string;
+    timeFrom: string;
+    timeTo: string;
+    allApiKeys: string;
+    clearFilters: string;
     filters: {
       all: string;
       success: string;

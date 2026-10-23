@@ -17,6 +17,10 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:8046',
+    // The seed timestamps are UTC. Pin the browser clock so `datetime-local`
+    // values parsed with `new Date(...)` land on the same instants regardless
+    // of the host timezone.
+    timezoneId: 'UTC',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
   },

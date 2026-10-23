@@ -293,10 +293,23 @@ export const api = {
       method: 'DELETE',
     }),
 
-  getAuditRequests: async () => {
+  getAuditRequests: async (params?: {
+    from?: number;
+    to?: number;
+    apiKeyId?: string;
+    limit?: number;
+  }) => {
     try {
+      const query = new URLSearchParams();
+      if (params?.from !== undefined) query.set('from', String(params.from));
+      if (params?.to !== undefined) query.set('to', String(params.to));
+      if (params?.apiKeyId !== undefined) {
+        query.set('apiKeyId', params.apiKeyId);
+      }
+      if (params?.limit !== undefined) query.set('limit', String(params.limit));
+      const queryString = query.toString();
       const res = await fetchJson<{ data: AuditRecord[] }>(
-        '/internal/audit/requests',
+        `/internal/audit/requests${queryString ? `?${queryString}` : ''}`,
       );
       return res.data || [];
     } catch {

@@ -394,6 +394,10 @@ export const en: Translations = {
       'Monitor all requests passing through the proxy in real-time for observability and debugging.',
     refreshBtn: 'Refresh Logs',
     filterPlaceholder: 'Filter by model (e.g. gemini, claude)...',
+    timeFrom: 'From',
+    timeTo: 'To',
+    allApiKeys: 'All API Keys',
+    clearFilters: 'Clear Filters',
     filters: {
       all: 'All',
       success: '2xx Success',
