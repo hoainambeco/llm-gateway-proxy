@@ -36,7 +36,16 @@ const SYSTEM_ROUTE_PATTERNS = [
  * when routes evolve.
  */
 export function classifyHttpTraffic(method: string, rawUrl: string): TrafficClass {
-  const pathname = rawUrl.split(/[?#]/u, 1)[0] || '/';
+  const rawPathname = rawUrl.split(/[?#]/u, 1)[0] || '/';
+  // Fastify routes on the percent-decoded path, so classify the same path it
+  // matches. Otherwise `/%67raphql` looks like an unknown model route and gets
+  // persisted as model traffic instead of system traffic.
+  let pathname = rawPathname;
+  try {
+    pathname = decodeURIComponent(rawPathname);
+  } catch {
+    // Malformed escape: keep the raw path, which matches nothing privileged.
+  }
   if (SYSTEM_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname))) {
     return 'system';
   }

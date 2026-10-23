@@ -202,8 +202,10 @@ export async function bootstrapNestServer(
     // /graphql unauthenticated. Guard the whole route instead.
     fastifyAdapter.getInstance().addHook('onRequest', async (request, reply) => {
       if (request.method === 'OPTIONS') return;
-      const pathname = (request.raw.url ?? request.url).split('?')[0];
-      if (pathname !== '/graphql') return;
+      // Fastify matches routes against a percent-decoded path, so compare the
+      // router's canonical path rather than the raw URL: `/%67raphql` reaches
+      // this route too.
+      if (request.routeOptions.url !== '/graphql') return;
 
       const token = extractApiKeyToken(request.headers);
       if (token && (await apiKeyService.validateAdminKey(token))) return;

@@ -38,4 +38,36 @@ describe('admin surface', () => {
     });
     expect(res.status).toBe(401);
   });
+
+  it('allows an admin key for graphql', async () => {
+    const res = await apiFetch(server.baseUrl, '/graphql', {
+      token: server.adminKey,
+      body: { query: '{ __typename }' },
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.data.__typename).toBe('Query');
+  });
+
+  it('rejects a client-role key for graphql', async () => {
+    const res = await apiFetch(server.baseUrl, '/graphql', {
+      token: server.clientKey,
+      body: { query: '{ __typename }' },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects an unauthenticated GET graphql request', async () => {
+    const res = await apiFetch(
+      server.baseUrl,
+      `/graphql?query=${encodeURIComponent('{ __typename }')}`,
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a percent-encoded graphql path without a token', async () => {
+    const res = await apiFetch(server.baseUrl, '/%67raphql', {
+      body: { query: '{ __typename }' },
+    });
+    expect(res.status).toBe(401);
+  });
 });
