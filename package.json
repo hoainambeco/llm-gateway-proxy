@@ -30,6 +30,8 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "test:unit": "jest --config jest.config.cjs",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.cjs --runInBand",
+    "test:e2e:watch": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.cjs --runInBand --watch",
     "test:unit:watch": "jest --config jest.config.cjs --watch",
     "test:cov": "jest --config jest.config.cjs --coverage"
   },
