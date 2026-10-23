@@ -32,6 +32,12 @@
     "test:unit": "jest --config jest.config.cjs",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.cjs --runInBand",
     "test:e2e:watch": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.e2e.config.cjs --runInBand --watch",
+    "test:playwright": "playwright test",
+    "test:playwright:ui": "playwright test --ui",
+    "test:playwright:headed": "playwright test --headed",
+    "test:playwright:debug": "playwright test --debug",
+    "test:playwright:server": "npm run build:all && tsx test/playwright/seed.ts && node dist/main.js",
+    "test:all": "npm run test:unit && npm run test:e2e && npm run test:playwright",
     "test:unit:watch": "jest --config jest.config.cjs --watch",
     "test:cov": "jest --config jest.config.cjs --coverage"
   },
@@ -62,6 +68,7 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",
     "@nestjs/schematics": "^11.1.0",
+    "@playwright/test": "^1.64.1",
     "@types/jest": "^29.5.14",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.13.4",
