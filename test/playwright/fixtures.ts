@@ -4,8 +4,11 @@ import { PW_ADMIN_KEY, PW_CLIENT_KEY } from './seed-data';
 export { expect } from '@playwright/test';
 
 export const test = base.extend<{ adminKey: string; clientKey: string }>({
-  adminKey: async (_fixtures, use) => use(PW_ADMIN_KEY),
-  clientKey: async (_fixtures, use) => use(PW_CLIENT_KEY),
+  // Playwright requires destructuring the fixtures argument; there is nothing to take.
+  // oxlint-disable-next-line no-empty-pattern
+  adminKey: async ({}, use) => use(PW_ADMIN_KEY),
+  // oxlint-disable-next-line no-empty-pattern
+  clientKey: async ({}, use) => use(PW_CLIENT_KEY),
 });
 
 export async function loginAsAdmin(page: Page, key = PW_ADMIN_KEY) {

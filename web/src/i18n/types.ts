@@ -82,7 +82,9 @@ export interface Translations {
     footerHint: string;
     errorEmpty: string;
     errorInvalid: string;
+    errorNotAdmin: string;
     errorConnection: string;
+    checking: string;
   };
   dashboard: {
     upstreamDiscoveryActive: string;

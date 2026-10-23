@@ -87,7 +87,9 @@ export const vi: Translations = {
     footerHint: 'API Key được dùng làm danh tính để ghi Traffic Logs',
     errorEmpty: 'Vui lòng nhập API Key',
     errorInvalid: 'API Key không hợp lệ',
+    errorNotAdmin: 'API Key này không có quyền admin',
     errorConnection: 'Không thể kết nối tới server: {message}',
+    checking: 'Đang kiểm tra phiên đăng nhập...',
   },
   dashboard: {
     upstreamDiscoveryActive: 'Dynamic Upstream Discovery Active',

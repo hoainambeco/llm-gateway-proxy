@@ -87,7 +87,9 @@ export const en: Translations = {
     footerHint: 'API Key is used as identity for recording Traffic Logs',
     errorEmpty: 'Please enter an API Key',
     errorInvalid: 'Invalid API Key',
+    errorNotAdmin: 'This API Key does not have admin access',
     errorConnection: 'Cannot connect to server: {message}',
+    checking: 'Checking your session...',
   },
   dashboard: {
     upstreamDiscoveryActive: 'Dynamic Upstream Discovery Active',

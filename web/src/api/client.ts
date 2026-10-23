@@ -12,6 +12,19 @@ import { getAdminKey } from './keyStorage';
 
 const BASE_URL = '';
 
+/**
+ * Fired on `window` whenever the backend answers 401. `App` listens for it and
+ * drops back to the login screen, so an expired/revoked key cannot leave the
+ * dashboard rendering empty panels.
+ */
+export const AUTH_UNAUTHORIZED_EVENT = 'admin-unauthorized';
+
+function notifyUnauthorized(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+  }
+}
+
 export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>,
@@ -27,6 +40,7 @@ export async function graphqlRequest<T>(
   });
 
   if (!res.ok) {
+    if (res.status === 401) notifyUnauthorized();
     const errorText = await res.text();
     let message = `GraphQL request failed: ${res.status} ${res.statusText}`;
     try {
@@ -64,6 +78,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
+    if (res.status === 401) notifyUnauthorized();
     const errorText = await res.text();
     let message = `Request failed: ${res.status} ${res.statusText}`;
     try {
