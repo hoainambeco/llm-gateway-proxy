@@ -53,7 +53,11 @@ describe('internal accounts API', () => {
     expect(missing.status).toBe(404);
   });
 
-  it('does not select a disabled account for model requests', async () => {
+  // Endpoint-level smoke test: with every account disabled the proxy refuses the
+  // request. Selection-level proof (a token-bearing account is skipped while an
+  // enabled one is still chosen) lives in the network-free unit spec
+  // `account-lease.disabled-accounts.spec.ts`.
+  it('returns 503 when every account is disabled', async () => {
     await apiFetch(server.baseUrl, '/internal/accounts', {
       token: server.adminKey,
       body: { provider: 'google', email: 'only@test.local' },
@@ -78,7 +82,7 @@ describe('internal accounts API', () => {
     expect(res.status).toBe(503);
   });
 
-  it('keeps disabled accounts visible in the overview', async () => {
+  it('keeps disabled accounts visible in the overview and can re-enable one', async () => {
     const list = await apiFetch(server.baseUrl, '/internal/accounts', {
       token: server.adminKey,
     });
@@ -91,6 +95,20 @@ describe('internal accounts API', () => {
     });
     expect(status.body.accounts.total).toBeGreaterThan(0);
     expect(status.body.accounts.active).toBe(0);
+
+    const target = list.body.data[0];
+    const enabled = await apiFetch(
+      server.baseUrl,
+      `/internal/accounts/${target.id}`,
+      { method: 'PATCH', token: server.adminKey, body: { is_active: true } },
+    );
+    expect(enabled.status).toBe(200);
+    expect(enabled.body.data.is_active).toBe(true);
+
+    const rechecked = await apiFetch(server.baseUrl, '/internal/system/status', {
+      token: server.adminKey,
+    });
+    expect(rechecked.body.accounts.active).toBe(1);
   });
 
   it('still creates and deletes accounts', async () => {
