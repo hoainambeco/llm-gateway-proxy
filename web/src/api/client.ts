@@ -117,6 +117,18 @@ export const api = {
       { method: 'POST' },
     ),
 
+  updateAccount: (
+    id: string,
+    patch: { name?: string | null; is_active?: boolean },
+  ) =>
+    fetchJson<{ success: true; data: Account }>(
+      `/internal/accounts/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      },
+    ),
+
   deleteAccount: (id: string) =>
     fetchJson<{ success: boolean; message: string }>(
       `/internal/accounts/${encodeURIComponent(id)}`,

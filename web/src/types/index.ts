@@ -31,6 +31,8 @@ export interface ModelQuotaInfo {
 export interface Account {
   id: string;
   email: string;
+  name?: string | null;
+  is_active?: boolean;
   provider: string;
   auth_type?: string;
   project_id?: string;

@@ -138,6 +138,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               </button>
               <button
                 type="button"
+                data-testid="confirm-dialog-confirm"
                 onClick={() => handleConfirm(true)}
                 className={`px-4 py-2 rounded-lg text-zinc-950 text-xs font-semibold shadow-md transition-all ${
                   confirmState.options.danger

@@ -5,7 +5,10 @@ import {
   Clock,
   Copy,
   ExternalLink,
+  Pencil,
   Plus,
+  Power,
+  PowerOff,
   RefreshCw,
   ShieldAlert,
   Trash2,
@@ -44,6 +47,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<'google' | 'anthropic' | 'copilot' | 'openai'>('google');
+
+  // List filters and inline row actions
+  const [search, setSearch] = useState('');
+  const [providerFilter, setProviderFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'disabled'>('all');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const [savingNameId, setSavingNameId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // Sub-tabs
   const [anthropicMode, setAnthropicMode] = useState<'json' | 'oauth' | 'api_key' | 'web_session'>('json');
@@ -122,12 +134,67 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
     try {
       setDeletingId(id);
       await api.deleteAccount(id);
+      if (editingId === id) {
+        setEditingId(null);
+        setEditingName('');
+      }
       onReload();
       toast.success(t('common.done'));
     } catch (err: any) {
       toast.error(t('accounts.deleteFailed', { message: err.message }));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleStartEditName = (account: Account) => {
+    setEditingId(account.id);
+    setEditingName(account.name ?? '');
+  };
+
+  const handleCancelEditName = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const handleSaveName = async (id: string) => {
+    try {
+      setSavingNameId(id);
+      await api.updateAccount(id, { name: editingName.trim() || null });
+      setEditingId(null);
+      setEditingName('');
+      onReload();
+      toast.success(t('common.done'));
+    } catch (err: any) {
+      toast.error(t('accounts.updateFailed', { message: err.message }));
+    } finally {
+      setSavingNameId(null);
+    }
+  };
+
+  const handleToggleActive = async (account: Account) => {
+    const nextActive = account.is_active === false;
+    const confirmed = await toast.confirm(
+      t(nextActive ? 'accounts.confirmEnable' : 'accounts.confirmDisable', {
+        email: account.email,
+      }),
+      {
+        title: t(nextActive ? 'accounts.enable' : 'accounts.disable'),
+        danger: !nextActive,
+        confirmLabel: t(nextActive ? 'accounts.enable' : 'accounts.disable'),
+        cancelLabel: t('common.cancel'),
+      },
+    );
+    if (!confirmed) return;
+
+    try {
+      setTogglingId(account.id);
+      await api.updateAccount(account.id, { is_active: nextActive });
+      onReload();
+    } catch (err: any) {
+      toast.error(t('accounts.updateFailed', { message: err.message }));
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -503,6 +570,25 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
     );
   };
 
+  const providerOptions = Array.from(
+    new Set(accounts.map((account) => account.provider).filter(Boolean)),
+  ).sort();
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredAccounts = accounts.filter((account) => {
+    if (providerFilter !== 'all' && account.provider !== providerFilter) {
+      return false;
+    }
+
+    const isDisabled = account.is_active === false;
+    if (statusFilter === 'active' && isDisabled) return false;
+    if (statusFilter === 'disabled' && !isDisabled) return false;
+
+    if (!normalizedSearch) return true;
+    return [account.email, account.name ?? '', account.id].some((value) =>
+      value.toLowerCase().includes(normalizedSearch),
+    );
+  });
+
   return (
     <div className="space-y-6">
       {/* Header controls */}
@@ -527,6 +613,46 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
           <Plus className="w-4 h-4" />
           <span>{t('accounts.addAccountBtn')}</span>
         </button>
+      </div>
+
+      {/* Search and filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
+        <input
+          type="search"
+          data-testid="accounts-search"
+          aria-label={t('accounts.searchPlaceholder')}
+          placeholder={t('accounts.searchPlaceholder')}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/60"
+        />
+        <select
+          data-testid="accounts-provider-filter"
+          aria-label={t('accounts.filterProvider')}
+          value={providerFilter}
+          onChange={(event) => setProviderFilter(event.target.value)}
+          className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/60"
+        >
+          <option value="all">{t('accounts.allProviders')}</option>
+          {providerOptions.map((provider) => (
+            <option key={provider} value={provider}>
+              {provider}
+            </option>
+          ))}
+        </select>
+        <select
+          data-testid="accounts-status-filter"
+          aria-label={t('accounts.filterStatus')}
+          value={statusFilter}
+          onChange={(event) =>
+            setStatusFilter(event.target.value as 'all' | 'active' | 'disabled')
+          }
+          className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/60"
+        >
+          <option value="all">{t('accounts.allStatuses')}</option>
+          <option value="active">{t('common.active')}</option>
+          <option value="disabled">{t('common.disabled')}</option>
+        </select>
       </div>
 
       {oauthUrl && (
@@ -556,15 +682,25 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
             {t('accounts.noAccountsSubhint')}
           </p>
         </div>
+      ) : filteredAccounts.length === 0 ? (
+        <div className="p-12 text-center rounded-2xl border border-zinc-800 bg-zinc-900/30">
+          <AlertCircle className="w-10 h-10 text-zinc-500 mx-auto mb-3" />
+          <p className="text-sm text-zinc-300 font-medium">
+            {t('accounts.noMatches')}
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {accounts.map((account) => {
+          {filteredAccounts.map((account) => {
             const models = account.quota?.models || {};
             const modelKeys = Object.keys(models);
+            const isDisabled = account.is_active === false;
 
             return (
               <div
                 key={account.id}
+                data-testid="account-row"
+                data-account-id={account.id}
                 className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700/80 transition-all space-y-4"
               >
                 {/* Account Header */}
@@ -574,8 +710,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
                       {account.email.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-base text-zinc-100">{account.email}</span>
+                        <span
+                          data-testid="account-name"
+                          className="text-xs px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300"
+                        >
+                          {account.name || account.email}
+                        </span>
                         <span className="text-xs font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
                           {account.id}
                         </span>
@@ -601,8 +743,16 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    {account.is_cooldown ? (
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                    {isDisabled ? (
+                      <span
+                        data-testid="account-disabled-badge"
+                        className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        {t('common.disabled')}
+                      </span>
+                    ) : account.is_cooldown ? (
                       <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
                         <ShieldAlert className="w-3.5 h-3.5" />
                         {t('accounts.cooldownRemaining', { seconds: account.cooldown_remaining_sec ?? 0 })}
@@ -613,6 +763,68 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
                         {t('common.active')}
                       </span>
                     )}
+
+                    {editingId === account.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          data-testid="account-name-input"
+                          aria-label={t('accounts.nameLabel')}
+                          value={editingName}
+                          onChange={(event) => setEditingName(event.target.value)}
+                          className="w-40 px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-zinc-100 focus:outline-none focus:border-emerald-500/60"
+                        />
+                        <button
+                          type="button"
+                          data-testid="account-save-name"
+                          onClick={() => handleSaveName(account.id)}
+                          disabled={savingNameId === account.id}
+                          className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all text-xs flex items-center gap-1.5 disabled:opacity-50"
+                          title={t('accounts.saveName')}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">{t('accounts.saveName')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEditName}
+                          className="px-2 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-200"
+                          title={t('common.cancel')}
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        data-testid="account-edit-name"
+                        onClick={() => handleStartEditName(account)}
+                        className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all text-xs flex items-center gap-1.5"
+                        title={t('accounts.editName')}
+                        aria-label={t('accounts.editName')}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      data-testid="account-toggle-active"
+                      onClick={() => handleToggleActive(account)}
+                      disabled={togglingId === account.id}
+                      className={`p-2 rounded-lg border transition-all text-xs flex items-center gap-1.5 disabled:opacity-50 ${
+                        isDisabled
+                          ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                          : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                      }`}
+                      title={t(isDisabled ? 'accounts.enable' : 'accounts.disable')}
+                      aria-label={t(isDisabled ? 'accounts.enable' : 'accounts.disable')}
+                    >
+                      {isDisabled ? (
+                        <Power className="w-3.5 h-3.5" />
+                      ) : (
+                        <PowerOff className="w-3.5 h-3.5" />
+                      )}
+                    </button>
 
                     {account.provider === 'google' && (
                       <button
@@ -627,6 +839,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
                     )}
 
                     <button
+                      type="button"
+                      data-testid="account-delete"
                       onClick={() => handleDeleteAccount(account.id, account.email)}
                       disabled={deletingId === account.id}
                       className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all text-xs flex items-center gap-1.5"
