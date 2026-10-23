@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
+import { PW_RUN_DIR } from './test/playwright/seed-data';
 
 // Fixed run directory so config evaluation in multiple workers cannot disagree.
 // The seed script owns clearing it; deleting it here could race a running server.
-const runDir = path.join(process.cwd(), 'test/.tmp/pw');
+const runDir = PW_RUN_DIR;
 fs.mkdirSync(runDir, { recursive: true });
 
 export default defineConfig({

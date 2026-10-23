@@ -15,14 +15,36 @@ import {
   PW_ADMIN_KEY_ID,
   PW_CLIENT_KEY,
   PW_CLIENT_KEY_ID,
+  PW_RUN_DIR,
   T0,
 } from './seed-data';
 
-const runDir = process.env.DATA_DIR || path.join(process.cwd(), 'test/.tmp/pw');
-const accountsFile =
-  process.env.ACCOUNTS_FILE || path.join(runDir, 'accounts.json');
-const routingFile =
-  process.env.ROUTING_CONFIG_PATH || path.join(runDir, 'routing.json');
+// Ignore ambient data-path settings. `npm run test:playwright:server` is also
+// printed as the debug command by Playwright, so a maintainer may run it
+// directly: it must never fall back to the real data/ or accounts.json, and an
+// exported DATA_DIR must never become the directory this script deletes.
+const runDir = PW_RUN_DIR;
+const testTmpRoot = path.resolve(process.cwd(), 'test/.tmp');
+const resolvedRunDir = path.resolve(runDir);
+
+// The deletion below is only safe for `<cwd>/test/.tmp/pw`; refuse anything
+// else, even if this module's constant is ever changed or shadowed.
+if (
+  path.dirname(resolvedRunDir) !== testTmpRoot ||
+  path.basename(resolvedRunDir) !== 'pw'
+) {
+  throw new Error(
+    `Refusing to seed outside the Playwright temp root: ${resolvedRunDir}`,
+  );
+}
+
+process.env.DATA_DIR = runDir;
+process.env.SQLITE_DB_PATH = path.join(runDir, 'test.sqlite');
+process.env.ACCOUNTS_FILE = path.join(runDir, 'accounts.json');
+process.env.ROUTING_CONFIG_PATH = path.join(runDir, 'routing.json');
+
+const accountsFile = path.join(runDir, 'accounts.json');
+const routingFile = path.join(runDir, 'routing.json');
 
 async function main(): Promise<void> {
   // The server is not running yet, so this process owns the directory. Starting
