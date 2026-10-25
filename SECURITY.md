@@ -47,9 +47,8 @@ These are documented rather than fixed, because the project assumes a trusted,
 single-operator deployment. Treat them as reasons not to expose the proxy to the public
 internet, not as vulnerabilities to report:
 
-- **Model API Authentication.** Model execution endpoints strictly require a valid client API key
-  stored in SQLite. Keyless requests are rejected with HTTP 401. Only loopback requests to the
-  model catalog (`GET /v1/models`) are permitted unauthenticated for editor agent discovery.
+- **Admin Surface & Dashboard Authentication.** Accessing the Web UI dashboard and administrative APIs (`/internal/*`, `/graphql`) strictly requires an Admin API key. On first launch with an empty database, a bootstrap admin key is generated and printed once to the console (or configured via `INITIAL_ADMIN_KEY`).
+- **Model API Authentication.** Model execution endpoints strictly require a valid dynamic API key (admin or client role) stored in SQLite. Keyless requests are rejected with HTTP 401. Only loopback requests to the model catalog (`GET /v1/models`) are permitted unauthenticated for editor agent discovery.
 - **No rate limiting.** Nothing throttles API key guesses or request volume. This is
   deliberate: the proxy fronts long-running agent sessions, where a throttle interrupts
   real work more often than it stops an attacker.

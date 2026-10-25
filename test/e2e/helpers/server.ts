@@ -50,11 +50,16 @@ export async function startTestServer(
 export async function apiFetch(
   baseUrl: string,
   path: string,
-  init: { method?: string; token?: string | null; body?: unknown } = {},
-): Promise<{ status: number; body: any }> {
-  const headers: Record<string, string> = {};
+  init: {
+    method?: string;
+    token?: string | null;
+    body?: unknown;
+    headers?: Record<string, string>;
+  } = {},
+): Promise<{ status: number; body: any; text: string; headers: Headers }> {
+  const headers: Record<string, string> = { ...(init.headers ?? {}) };
   if (init.token) headers.Authorization = `Bearer ${init.token}`;
-  if (init.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (init.body !== undefined && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
 
   const res = await fetch(`${baseUrl}${path}`, {
     method: init.method ?? (init.body === undefined ? 'GET' : 'POST'),
@@ -62,5 +67,11 @@ export async function apiFetch(
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
   });
   const text = await res.text();
-  return { status: res.status, body: text ? JSON.parse(text) : null };
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = text;
+  }
+  return { status: res.status, body, text, headers: res.headers };
 }
