@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-10-25T13:00:02.607Z",
+  "git": {
+    "totalCommits": 45,
+    "contributors": [
+      {
+        "commits": 21,
+        "author": "hoainambeco"
+      },
+      {
+        "commits": 15,
+        "author": "HoaiNam"
+      },
+      {
+        "commits": 6,
+        "author": "dependabot[bot]"
+      },
+      {
+        "commits": 4,
+        "author": "Nguyễn Hoài Nam"
+      },
+      {
+        "commits": 4,
+        "author": "Nguyễn Hoài nam"
+      }
+    ],
+    "distinctHumanAuthors": 1,
+    "topContributorRatio": "88.0%",
+    "busFactor": 1
+  },
+  "loc": {
+    "backend": {
+      "files": 277,
+      "lines": 50136
+    },
+    "frontend": {
+      "files": 33,
+      "lines": 8604
+    },
+    "tests": {
+      "files": 28,
+      "lines": 1652
+    },
+    "totalLines": 60392
+  },
+  "typecheck": {
+    "success": true,
+    "exitCode": 0,
+    "errors": 0
+  },
+  "lint": {
+    "warnings": 36,
+    "errors": 0,
+    "totalIssues": 36
+  },
+  "tests": {
+    "unit": {
+      "coverage": {
+        "lines": 30.98,
+        "statements": 30.97,
+        "functions": 27.3,
+        "branches": 18.81,
+        "linesCovered": 2044,
+        "linesTotal": 6596
+      },
+      "passed": 205,
+      "failed": 0,
+      "total": 205
+    },
+    "e2e": {
+      "passed": 27,
+      "failed": 0,
+      "total": 27
+    },
+    "playwright": {
+      "passed": 24,
+      "failed": 0,
+      "total": 24
+    },
+    "totalPassed": 256,
+    "totalFailed": 0,
+    "totalCount": 256
+  },
+  "security": {
+    "vulnerabilities": {
+      "critical": 0,
+      "high": 1,
+      "moderate": 1,
+      "low": 1,
+      "total": 3
+    },
+    "advisories": [
+      {
+        "package": "fast-uri",
+        "severity": "moderate",
+        "title": "fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding",
+        "url": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg"
+      },
+      {
+        "package": "fastify",
+        "severity": "low",
+        "title": "fastify is vulnerable to header validation bypass via case-sensitive propertyNames",
+        "url": "https://github.com/advisories/GHSA-389g-gv7q-r4x8"
+      },
+      {
+        "package": "zod",
+        "severity": "high",
+        "title": "Zod can exhaust memory while validating oversized constrained collections",
+        "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+      }
+    ]
+  }
+}

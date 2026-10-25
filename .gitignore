@@ -59,15 +59,15 @@ __pycache__/
 
 
 # Local agent / assistant config and notes
-.claude/
+# .claude/
 .claude.bak/
 .claude.backup/
 .gemini/settings.json
-.codex/
-.agents/
-.agent/
-.agent/rules
-.agent/skills
+# .codex/
+# .agents/
+# .agent/
+# .agent/rules
+# .agent/skills
 .kiro/
 .serena/cache
 .claudeignore
@@ -75,8 +75,8 @@ __pycache__/
 repomix-output.xml
 plans/
 .AI/
-AGENTS.md
-CLAUDE.md
+# AGENTS.md
+# CLAUDE.md
 
 # Local worktrees and reference checkouts
 worktrees/
