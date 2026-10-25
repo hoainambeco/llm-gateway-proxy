@@ -17,6 +17,6 @@ test('renders dashboard summary cards and navigation', async ({ page }) => {
   await expect(page.getByTestId('account-row')).toHaveCount(3);
 
   // Return to dashboard via sidebar
-  await page.getByRole('button', { name: /dashboard|tổng quan/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /dashboard|tổng quan/i }).click();
   await expect(page.getByRole('button', { name: /view accounts|xem tài khoản/i })).toBeVisible();
 });

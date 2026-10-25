@@ -4,7 +4,7 @@ import { PW_CLIENT_KEY_ID } from './seed-data';
 test.describe('Audit Logs View', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-    await page.getByRole('button', { name: /traffic|nhật ký|logs/i }).click();
+    await page.getByRole('navigation').getByRole('button', { name: /traffic|nhật ký|logs/i }).click();
   });
 
   test('filters audit rows by time range', async ({ page }) => {
@@ -28,7 +28,7 @@ test.describe('Audit Logs View', () => {
 test.describe('Analytics View', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-    await page.getByRole('button', { name: /^token analytics$|^thống kê token$/i }).click();
+    await page.getByRole('navigation').getByRole('button', { name: /^token analytics$|^thống kê token$/i }).click();
   });
 
   test('renders analytics summary cards, export button, and time series chart', async ({ page }) => {

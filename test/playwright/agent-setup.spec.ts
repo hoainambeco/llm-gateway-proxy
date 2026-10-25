@@ -2,7 +2,7 @@ import { expect, loginAsAdmin, test } from './fixtures';
 
 test.beforeEach(async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole('button', { name: /^agent setup$/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /^agent setup$/i }).click();
 });
 
 test('renders agent presets and generated config snippets', async ({ page }) => {

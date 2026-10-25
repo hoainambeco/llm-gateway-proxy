@@ -2,7 +2,7 @@ import { expect, loginAsAdmin, test } from './fixtures';
 
 test.beforeEach(async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole('button', { name: /accounts|tài khoản/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /accounts|tài khoản/i }).click();
 });
 
 test('searches and filters seeded accounts', async ({ page }) => {
@@ -26,7 +26,7 @@ test('renames an account and persists after reload', async ({ page }) => {
   );
 
   await page.reload();
-  await page.getByRole('button', { name: /accounts|tài khoản/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /accounts|tài khoản/i }).click();
   await expect(page.getByTestId('account-name').first()).toContainText(
     'Renamed in test',
   );
@@ -55,7 +55,7 @@ test('deletes a disposable account', async ({ page, request, adminKey }) => {
   expect(created.ok()).toBeTruthy();
 
   await page.reload();
-  await page.getByRole('button', { name: /accounts|tài khoản/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /accounts|tài khoản/i }).click();
   const row = page
     .getByTestId('account-row')
     .filter({ hasText: 'delete-me@test.local' });

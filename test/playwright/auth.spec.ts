@@ -161,6 +161,6 @@ test('a GraphQL 401 drops the dashboard back to login', async ({
 
   // Analytics loads its data through GraphQL; its /internal/api-keys call is
   // intentionally left alone.
-  await page.getByRole('button', { name: 'Token Analytics' }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'Token Analytics' }).click();
   await expectLoggedOut(page);
 });

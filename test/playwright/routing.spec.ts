@@ -2,7 +2,7 @@ import { expect, loginAsAdmin, test } from './fixtures';
 
 test.beforeEach(async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole('button', { name: /^routing rules$/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /^routing rules$/i }).click();
 });
 
 test('displays seeded routing rules and default pipeline', async ({ page }) => {
@@ -40,7 +40,7 @@ test('adds a custom routing rule, saves, and persists across reloads', async ({ 
 
     // Reload and verify persisted
     await page.reload();
-    await page.getByRole('button', { name: /^routing rules$/i }).click();
+    await page.getByRole('navigation').getByRole('button', { name: /^routing rules$/i }).click();
     await expect(page.getByText('test-custom-pattern-*')).toBeVisible();
   } finally {
     // Restore original routing configuration

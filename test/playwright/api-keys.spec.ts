@@ -2,7 +2,7 @@ import { expect, loginAsAdmin, test } from './fixtures';
 
 test.beforeEach(async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole('button', { name: /^API Keys$/i }).click();
+  await page.getByRole('navigation').getByRole('button', { name: /^API Keys$/i }).click();
 });
 
 test('lists seeded API keys with previews', async ({ page }) => {
