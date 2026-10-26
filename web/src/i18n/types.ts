@@ -82,7 +82,9 @@ export interface Translations {
     footerHint: string;
     errorEmpty: string;
     errorInvalid: string;
+    errorNotAdmin: string;
     errorConnection: string;
+    checking: string;
   };
   dashboard: {
     upstreamDiscoveryActive: string;
@@ -121,6 +123,20 @@ export interface Translations {
     oauthBlockedHint: string;
     noAccountsYet: string;
     noAccountsSubhint: string;
+    noMatches: string;
+    searchPlaceholder: string;
+    filterProvider: string;
+    filterStatus: string;
+    allProviders: string;
+    allStatuses: string;
+    editName: string;
+    saveName: string;
+    nameLabel: string;
+    disable: string;
+    enable: string;
+    confirmDisable: string;
+    confirmEnable: string;
+    updateFailed: string;
     projectLabel: string;
     tierLabel: string;
     cooldownRemaining: string;
@@ -342,6 +358,10 @@ export interface Translations {
     description: string;
     refreshBtn: string;
     filterPlaceholder: string;
+    timeFrom: string;
+    timeTo: string;
+    allApiKeys: string;
+    clearFilters: string;
     filters: {
       all: string;
       success: string;

@@ -294,8 +294,9 @@ docker run -d \
 
 ## 7. Hướng dẫn kết nối các Client
 
-Trước khi kết nối, bạn hãy tạo riêng một API Key cho mỗi client (hoặc dùng Master Key trong `.env`):
+Khi khởi động server lần đầu với database trống, hệ thống sẽ tự động tạo một bootstrap Admin Key (`sk-ag-...`) và in ra log console một lần duy nhất (hoặc cấu hình sẵn qua biến môi trường `INITIAL_ADMIN_KEY`). Bạn dùng key này để đăng nhập vào Web Dashboard (`http://localhost:8045/`) và tạo các API Key riêng cho từng client:
 ```bash
+# Hoặc tạo trực tiếp qua CLI:
 npm run api-key create "Cursor của Nam"
 # Lấy key có dạng: sk-ag-xxxxxxxxxxxxxxxxxxxxxxxx
 ```
@@ -493,7 +494,30 @@ aider --openai-api-base http://localhost:8045/v1 \
 
 ---
 
-## 9. Xử lý lỗi thường gặp (Troubleshooting)
+## 9. Chạy Bộ Test (Unit, E2E & Playwright)
+
+Hệ thống đi kèm bộ kiểm thử tự động toàn diện:
+```bash
+# Chạy toàn bộ Unit test và E2E API test:
+npm test
+
+# Chạy riêng Unit test:
+npm run test:unit
+
+# Chạy riêng E2E API test:
+npm run test:e2e
+
+# Chạy Playwright E2E browser test:
+npm run test:playwright
+
+# Chạy tất cả các tầng test:
+npm run test:all
+```
+Chi tiết về kiến trúc test, xem thêm tại file [TESTING.md](TESTING.md).
+
+---
+
+## 10. Xử lý lỗi thường gặp (Troubleshooting)
 
 ### 1. Lỗi `address already in use` hoặc `EADDRINUSE: 8045`
 - **Nguyên nhân:** Cổng 8045 đang bị một tiến trình khác (hoặc app AntigravityManager chính) chiếm dụng.

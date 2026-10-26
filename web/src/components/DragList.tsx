@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 export type DropSide = 'before' | 'after';
 
@@ -52,7 +52,6 @@ export function DragList<T>({
     null,
   );
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const resetDrag = () => {
     setDragIndex(null);
@@ -118,19 +117,22 @@ export function DragList<T>({
     }
     event.preventDefault();
     onReorder(index, target);
-    // Focus follows the row that moved, so consecutive presses keep moving the
-    // same entry instead of re-grabbing whatever landed in the old slot. The
-    // index is resolved after commit, once the rows have re-rendered.
+    // The list root is resolved from the event's own target instead of a ref,
+    // so nothing render-scoped is captured here. Focus follows the row that
+    // moved, so consecutive presses keep moving the same entry instead of
+    // re-grabbing whatever landed in the old slot. The index is resolved after
+    // commit, once the rows have re-rendered.
+    const root = event.currentTarget?.closest<HTMLElement>('[data-drag-list]');
     requestAnimationFrame(() => {
       setFocusedIndex(target);
-      rootRef.current
+      root
         ?.querySelector<HTMLElement>(`[data-drag-handle="${target}"]`)
         ?.focus();
     });
   };
 
   return (
-    <div className={className} ref={rootRef}>
+    <div className={className} data-drag-list>
       {items.map((item, index) => {
         const key = getKey?.(item, index) ?? String(index);
         const dropSide =

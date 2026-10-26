@@ -17,7 +17,9 @@ export class SystemStatusController {
   async getStatus() {
     const config = getServerConfig();
     const accounts = await this.accountLeaseService.getAccountsOverview();
-    const activeAccounts = accounts.filter((a) => a.is_healthy && !a.is_cooldown);
+    const activeAccounts = accounts.filter(
+      (a) => a.is_active !== false && a.is_healthy && !a.is_cooldown,
+    );
     const apiKeys = await this.apiKeyService.listKeys();
     const activeKeys = apiKeys.filter((k) => k.isActive);
     const models = getOpenAICompatibleModels(

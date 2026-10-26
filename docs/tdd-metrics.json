@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-10-25T16:25:22.204Z",
+  "git": {
+    "totalCommits": 46,
+    "contributors": [
+      {
+        "commits": 22,
+        "author": "hoainambeco"
+      },
+      {
+        "commits": 15,
+        "author": "HoaiNam"
+      },
+      {
+        "commits": 6,
+        "author": "dependabot[bot]"
+      },
+      {
+        "commits": 4,
+        "author": "Nguyễn Hoài Nam"
+      },
+      {
+        "commits": 4,
+        "author": "Nguyễn Hoài nam"
+      }
+    ],
+    "distinctHumanAuthors": 1,
+    "topContributorRatio": "88.2%",
+    "busFactor": 1
+  },
+  "loc": {
+    "backend": {
+      "files": 339,
+      "lines": 63133
+    },
+    "frontend": {
+      "files": 34,
+      "lines": 8662
+    },
+    "tests": {
+      "files": 29,
+      "lines": 1716
+    },
+    "totalLines": 73511
+  },
+  "typecheck": {
+    "success": true,
+    "exitCode": 0,
+    "errors": 0
+  },
+  "lint": {
+    "warnings": 0,
+    "errors": 0,
+    "totalIssues": 0
+  },
+  "tests": {
+    "unit": {
+      "coverage": {
+        "lines": 89.05,
+        "statements": 88.98,
+        "functions": 89.37,
+        "branches": 79.27,
+        "linesCovered": 6054,
+        "linesTotal": 6798
+      },
+      "passed": 981,
+      "failed": 0,
+      "total": 981
+    },
+    "e2e": {
+      "passed": 27,
+      "failed": 0,
+      "total": 27
+    },
+    "playwright": {
+      "passed": 24,
+      "failed": 0,
+      "total": 24
+    },
+    "totalPassed": 1032,
+    "totalFailed": 0,
+    "totalCount": 1032
+  },
+  "security": {
+    "vulnerabilities": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0,
+      "total": 0
+    },
+    "advisories": []
+  }
+}

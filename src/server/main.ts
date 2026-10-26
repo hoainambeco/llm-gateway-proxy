@@ -13,12 +13,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import 'reflect-metadata';
 import { isObservable } from 'rxjs';
-import { hashApiKey, hashesEqual } from '../modules/api-key/api-key-hash';
 import { ApiKeyService } from '../modules/api-key/api-key.service';
-import {
-  extractApiKeyToken,
-  hasConfiguredApiKey,
-} from '../modules/proxy-gateway/server/guards/api-key-auth.util';
+import { extractApiKeyToken } from '../modules/proxy-gateway/server/guards/api-key-auth.util';
 import { AccountLeaseService } from '../modules/proxy-gateway/server/modules/account-lease/account-lease.service';
 import { DEFAULT_MAX_FILE_BYTES } from '../modules/proxy-gateway/server/modules/files/file-store.types';
 import { OpenAIOperations } from '../modules/proxy-gateway/server/modules/openai/openai-operations.service';
@@ -29,7 +25,7 @@ import { logger } from '../shared/logging/logger';
 import { AppModule } from './app.module';
 
 import { ProxyConfig } from '@/modules/config/types';
-import { getServerConfig, setServerConfig } from './server-config';
+import { setServerConfig } from './server-config';
 
 let app: NestFastifyApplication | null = null;
 let currentPort: number = 0;
@@ -196,6 +192,33 @@ export async function bootstrapNestServer(
     );
 
     const apiKeyService = app.get(ApiKeyService);
+
+    // Resolver-level guards only run for fields resolved by that resolver, so an
+    // introspection-only query such as `{ __typename }` would otherwise reach
+    // /graphql unauthenticated. Guard the whole route instead.
+    fastifyAdapter.getInstance().addHook('onRequest', async (request, reply) => {
+      if (request.method === 'OPTIONS') return;
+      // Fastify matches routes against a percent-decoded path, so compare the
+      // router's canonical path rather than the raw URL: `/%67raphql` reaches
+      // this route too.
+      if (request.routeOptions.url !== '/graphql') return;
+
+      const token = extractApiKeyToken(request.headers);
+      if (token && (await apiKeyService.validateAdminKey(token))) return;
+
+      if (token) {
+        logger.warn('Rejected unauthorized GraphQL request with invalid token');
+      } else {
+        logger.warn('Rejected GraphQL request without a token');
+      }
+      reply.code(401).send({
+        statusCode: 401,
+        message: token
+          ? 'Admin API key validation failed'
+          : 'Admin API key is required',
+      });
+    });
+
     app.enableCors();
 
     const webDistPath = path.resolve(process.cwd(), 'web/dist');

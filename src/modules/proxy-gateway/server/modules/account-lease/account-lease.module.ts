@@ -14,6 +14,11 @@ import {
 import { AccountLeaseService } from './account-lease.service';
 import { ImageAccountSchedulerService } from './image-account-scheduler.service';
 import { UpstreamsModule } from '@/modules/proxy-gateway/upstreams/upstreams.module';
+import {
+  COOLDOWN_BUS_TOKEN,
+  NoopCooldownBus,
+  RedisCooldownBus,
+} from '../../shared/services/cooldown-bus';
 
 @Module({
   imports: [UpstreamsModule],
@@ -24,6 +29,17 @@ import { UpstreamsModule } from '@/modules/proxy-gateway/upstreams/upstreams.mod
     // because `AccountLeaseService` is its only writer, and putting it in `shared/` would
     // make `SharedServicesModule` and `AccountLeaseModule` import each other.
     RateLimitTrackerService,
+    {
+      provide: COOLDOWN_BUS_TOKEN,
+      useFactory: () => {
+        if (process.env.REDIS_URL) {
+          const bus = new RedisCooldownBus();
+          void bus.init();
+          return bus;
+        }
+        return new NoopCooldownBus();
+      },
+    },
     {
       provide: ModelAvailabilityService,
       useValue: proxyModelAvailabilityStore,

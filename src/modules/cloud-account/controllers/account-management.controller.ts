@@ -1,3 +1,4 @@
+import { parseAccountUpdateInput } from '@/modules/cloud-account/account-update';
 import { GoogleAPIService } from '@/modules/cloud-account/services/GoogleAPIService';
 import { consumeGoogleOAuthState } from '@/modules/cloud-account/services/google-oauth-state';
 import { OAuthCallbackServer } from '@/modules/cloud-account/services/OAuthCallbackServer';
@@ -15,7 +16,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  NotFoundException,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -179,6 +182,26 @@ export class AccountManagementController {
       success: true,
       message: 'Account added successfully',
       data: newAccount,
+    };
+  }
+
+  @Patch(':id')
+  async updateAccount(@Param('id') accountId: string, @Body() body: unknown) {
+    // Validate before touching storage so a bad request never writes partially.
+    const parsed = parseAccountUpdateInput(body);
+
+    const existing = await jsonAccountStoreInstance.getAccount(accountId);
+    if (!existing) {
+      throw new NotFoundException('Account not found');
+    }
+
+    await jsonAccountStoreInstance.upsertAccount({ ...existing, ...parsed });
+    await this.accountLeaseService.loadAccounts();
+
+    const overview = await this.accountLeaseService.getAccountsOverview();
+    return {
+      success: true,
+      data: overview.find((account) => account.id === accountId),
     };
   }
 

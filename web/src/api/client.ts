@@ -12,6 +12,19 @@ import { getAdminKey } from './keyStorage';
 
 const BASE_URL = '';
 
+/**
+ * Fired on `window` whenever the backend answers 401. `App` listens for it and
+ * drops back to the login screen, so an expired/revoked key cannot leave the
+ * dashboard rendering empty panels.
+ */
+export const AUTH_UNAUTHORIZED_EVENT = 'admin-unauthorized';
+
+function notifyUnauthorized(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+  }
+}
+
 export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>,
@@ -27,6 +40,7 @@ export async function graphqlRequest<T>(
   });
 
   if (!res.ok) {
+    if (res.status === 401) notifyUnauthorized();
     const errorText = await res.text();
     let message = `GraphQL request failed: ${res.status} ${res.statusText}`;
     try {
@@ -64,6 +78,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
+    if (res.status === 401) notifyUnauthorized();
     const errorText = await res.text();
     let message = `Request failed: ${res.status} ${res.statusText}`;
     try {
@@ -100,6 +115,18 @@ export const api = {
         ? `/internal/accounts/sync?id=${encodeURIComponent(id)}`
         : '/internal/accounts/sync',
       { method: 'POST' },
+    ),
+
+  updateAccount: (
+    id: string,
+    patch: { name?: string | null; is_active?: boolean },
+  ) =>
+    fetchJson<{ success: true; data: Account }>(
+      `/internal/accounts/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      },
     ),
 
   deleteAccount: (id: string) =>
@@ -266,10 +293,23 @@ export const api = {
       method: 'DELETE',
     }),
 
-  getAuditRequests: async () => {
+  getAuditRequests: async (params?: {
+    from?: number;
+    to?: number;
+    apiKeyId?: string;
+    limit?: number;
+  }) => {
     try {
+      const query = new URLSearchParams();
+      if (params?.from !== undefined) query.set('from', String(params.from));
+      if (params?.to !== undefined) query.set('to', String(params.to));
+      if (params?.apiKeyId !== undefined) {
+        query.set('apiKeyId', params.apiKeyId);
+      }
+      if (params?.limit !== undefined) query.set('limit', String(params.limit));
+      const queryString = query.toString();
       const res = await fetchJson<{ data: AuditRecord[] }>(
-        '/internal/audit/requests',
+        `/internal/audit/requests${queryString ? `?${queryString}` : ''}`,
       );
       return res.data || [];
     } catch {

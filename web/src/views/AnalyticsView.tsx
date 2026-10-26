@@ -33,8 +33,20 @@ export const AnalyticsView: React.FC = () => {
 
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
   const [stats, setStats] = useState<TokenUsageStatsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [requestState, setRequestState] = useState<'loading' | 'ready'>('loading');
   const [error, setError] = useState<string | null>(null);
+
+  // A filter change starts a new fetch. The busy flag is adjusted during
+  // render (react.dev "adjust state during render") instead of inside the
+  // effect, so the refetch effect never sets state synchronously.
+  const queryKey = `${rangePreset}|${selectedApiKeyId}|${customFrom}|${customTo}`;
+  const [prevQueryKey, setPrevQueryKey] = useState(queryKey);
+  if (prevQueryKey !== queryKey) {
+    setPrevQueryKey(queryKey);
+    setRequestState('loading');
+    setError(null);
+  }
+  const isLoading = requestState === 'loading';
 
   // Fetch API keys for filter dropdown
   useEffect(() => {
@@ -43,34 +55,35 @@ export const AnalyticsView: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  const loadStats = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      let from: number | undefined;
-      let to: number | undefined;
-      if (rangePreset === 'CUSTOM') {
-        if (customFrom) from = new Date(customFrom).getTime();
-        if (customTo) to = new Date(customTo).getTime();
-      }
+  const loadStats = useCallback(() => {
+    let from: number | undefined;
+    let to: number | undefined;
+    if (rangePreset === 'CUSTOM') {
+      if (customFrom) from = new Date(customFrom).getTime();
+      if (customTo) to = new Date(customTo).getTime();
+    }
 
-      const res = await api.getTokenStats({
+    return api
+      .getTokenStats({
         range: rangePreset,
         from,
         to,
         apiKeyId: selectedApiKeyId || undefined,
-      });
-      setStats(res);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch token analytics');
-    } finally {
-      setIsLoading(false);
-    }
+      })
+      .then((res) => setStats(res))
+      .catch((err: any) => setError(err.message || 'Failed to fetch token analytics'))
+      .finally(() => setRequestState('ready'));
   }, [rangePreset, selectedApiKeyId, customFrom, customTo]);
 
   useEffect(() => {
-    loadStats();
+    void loadStats();
   }, [loadStats]);
+
+  const handleRefresh = () => {
+    setRequestState('loading');
+    setError(null);
+    void loadStats();
+  };
 
   const handleExportCsv = () => {
     if (!stats) return;
@@ -132,7 +145,7 @@ export const AnalyticsView: React.FC = () => {
           {/* Refresh button */}
           <button
             type="button"
-            onClick={loadStats}
+            onClick={handleRefresh}
             disabled={isLoading}
             className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 rounded-lg text-xs transition-colors disabled:opacity-50"
             title="Refresh"

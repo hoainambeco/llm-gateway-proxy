@@ -64,6 +64,8 @@ The built-in web dashboard (served by the proxy itself) for managing accounts, r
 - **Ultra-lightweight & Headless**:
   - Pure Node.js & TypeScript built on NestJS & Fastify.
   - Deployable on Linux VPS, macOS, Windows, or Docker containers.
+- **Comprehensive Architecture Documentation**:
+  - Full request lifecycle, protocol mapping engine, account lease state machine, thought signature preservation, and clustering documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
@@ -272,20 +274,27 @@ every prompt and response in full.
 
 ### Authentication & Security
 
-- **Dashboard Access:** By default, accessing the Web UI (`http://localhost:8045/`) and internal management APIs does not require a login key. You can view connected accounts, routing rules, and manage API keys directly.
-- **Model API Authentication:** Every request to proxy model endpoints (OpenAI, Anthropic, Gemini, etc.) **strictly requires** a valid dynamic API key. Keyless or unauthorized model requests are rejected immediately with HTTP `401 Unauthorized`.
+- **Dashboard Access & Login Gate:** Accessing the Web UI dashboard and management APIs (`/internal/*`, `/graphql`) **strictly requires an Admin API Key**. On first startup, if no admin key exists, an initial admin bootstrap key (`sk-ag-...`) is automatically generated and displayed once in the server logs (or you can provide `INITIAL_ADMIN_KEY` in environment variables). Entering this key in the login gate grants access to the dashboard.
+- **Model API Authentication:** Every request to proxy model endpoints (OpenAI, Anthropic, Gemini, etc.) **strictly requires** a valid dynamic API key (`sk-ag-...`). Keyless or unauthorized model requests are rejected immediately with HTTP `401 Unauthorized`.
 - **Model Catalog Discovery:** Only local loopback discovery requests (`GET /v1/models` from `127.0.0.1`) are permitted unauthenticated to facilitate model discovery by local editors and extensions.
+
+### Testing
+
+Run the automated test suites:
+- `npm test`: Runs all Unit tests and E2E API tests.
+- `npm run test:playwright`: Runs full browser end-to-end tests with Playwright.
+- `npm run test:all`: Runs the complete test suite.
+See [TESTING.md](TESTING.md) for full details.
 
 ### Before putting it on a network
 
-1. Generate client API keys in the Web UI (under "API Keys" tab) or via CLI: `npm run api-key create "Client Name"`.
+1. Use your Admin API key to log in to the dashboard, or manage keys via CLI: `npm run api-key create "Client Name"`.
 2. Keep it behind a reverse proxy with TLS if accessing over untrusted networks. Plain HTTP sends keys across the network in cleartext.
 3. Add rate limiting at your reverse proxy if needed. The proxy does not throttle requests by design.
 4. Do not expose administrative ports freely to the public internet. See [SECURITY.md](SECURITY.md) for details.
 
-Client API keys are stored only as SHA-256 digests. A key is displayed once, when it is
-created, and cannot be recovered afterwards — if you lose one, delete it and create a new
-one.
+API keys are stored only as SHA-256 digests. A key is displayed once, when it is
+created, and cannot be recovered afterwards — if you lose one, revoke it and create a new one.
 
 ---
 
@@ -435,3 +444,9 @@ aider --openai-api-base http://localhost:8045/v1 \
       --openai-api-key sk-ag-YOUR_API_KEY \
       --model openai/claude-3-7-sonnet
 ```
+
+---
+
+## Architecture & Internals
+
+For in-depth details on the request lifecycle, protocol mapping engine, account lease state machine, thought signature recovery, audit pipeline, and Redis multi-node clustering, see the [Architecture Guide](docs/ARCHITECTURE.md).

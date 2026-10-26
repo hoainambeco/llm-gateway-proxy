@@ -228,7 +228,9 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
 
   async syncAllAccountQuotas(): Promise<void> {
     const nowSeconds = Math.floor(Date.now() / 1000);
-    const accountIds = Array.from(this.tokens.keys());
+    const accountIds = Array.from(this.tokens.keys()).filter(
+      (accountId) => !this.isAccountDisabled(accountId),
+    );
     if (accountIds.length === 0) {
       return;
     }
@@ -293,6 +295,16 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
     this.clearAllSessions();
     void this.syncAllAccountQuotas();
     return count;
+  }
+
+  /**
+   * An account disabled through `PATCH /internal/accounts/:id` must never be
+   * selected, refreshed, or counted as active. `this.tokens` is built from every
+   * account that carries a token, so the `is_active` flag has to be checked
+   * against `allAccounts` at each use site.
+   */
+  private isAccountDisabled(accountId: string): boolean {
+    return this.allAccounts.get(accountId)?.is_active === false;
   }
 
   public getAccountsForProvider(providerType: UpstreamProviderType): CloudAccount[] {
@@ -386,6 +398,8 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
       return {
         id: account.id,
         email: account.email,
+        name: account.name ?? null,
+        is_active: account.is_active !== false,
         provider: account.provider,
         auth_type: account.auth_type,
         project_id: account.token?.project_id,
@@ -583,6 +597,9 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
 
       const fullAccountPool = Array.from(this.tokens.entries()).filter(
         ([accountId, tokenData]) => {
+          if (this.isAccountDisabled(accountId)) {
+            return false;
+          }
           if (
             allowedAccountIds &&
             !allowedAccountIds.has(accountId) &&
@@ -759,7 +776,10 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   private syncImageSchedulerAccounts(): void {
-    this.imageScheduler.syncAccounts(this.tokens.keys());
+    const enabledAccountIds = Array.from(this.tokens.keys()).filter(
+      (accountId) => !this.isAccountDisabled(accountId),
+    );
+    this.imageScheduler.syncAccounts(enabledAccountIds);
   }
 
   private selectModelCapableAccounts(allTokens: TokenEntry[], model?: string): TokenEntry[] {
@@ -916,7 +936,7 @@ export class AccountLeaseService implements OnModuleInit, OnModuleDestroy {
   async refreshDiscoveredProviderModels(): Promise<void> {
     if (!this.providerModelDiscovery) return;
     const nonGoogle = Array.from(this.allAccounts.values()).filter(
-      (acc) => acc.provider && acc.provider !== 'google',
+      (acc) => acc.provider && acc.provider !== 'google' && acc.is_active !== false,
     );
     if (nonGoogle.length === 0) {
       this.discoveredProviderModels.clear();

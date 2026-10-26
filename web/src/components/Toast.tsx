@@ -1,32 +1,17 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Info, X, HelpCircle } from 'lucide-react';
 import { useTranslation } from '../i18n';
-
-type ToastType = 'success' | 'error' | 'info' | 'warning';
+import {
+  ToastContext,
+  type ConfirmOptions,
+  type ToastType,
+} from './toast-context';
 
 interface ToastItem {
   id: number;
   type: ToastType;
   message: string;
 }
-
-interface ConfirmOptions {
-  title?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  danger?: boolean;
-}
-
-interface ToastContextValue {
-  toast: (message: string, type?: ToastType) => void;
-  success: (message: string) => void;
-  error: (message: string) => void;
-  info: (message: string) => void;
-  warning: (message: string) => void;
-  confirm: (message: string, options?: ConfirmOptions) => Promise<boolean>;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TOAST_ICONS: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle2 className="w-5 h-5 text-emerald-400" />,
@@ -138,6 +123,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               </button>
               <button
                 type="button"
+                data-testid="confirm-dialog-confirm"
                 onClick={() => handleConfirm(true)}
                 className={`px-4 py-2 rounded-lg text-zinc-950 text-xs font-semibold shadow-md transition-all ${
                   confirmState.options.danger
@@ -154,11 +140,3 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </ToastContext.Provider>
   );
 };
-
-export function useToast(): ToastContextValue {
-  const ctx = useContext(ToastContext);
-  if (!ctx) {
-    throw new Error('useToast must be used within ToastProvider');
-  }
-  return ctx;
-}

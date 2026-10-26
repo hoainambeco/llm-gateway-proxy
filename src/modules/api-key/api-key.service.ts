@@ -1,4 +1,3 @@
-import { getServerConfig } from "@/server/server-config";
 import {
   BadRequestException,
   Injectable,
@@ -9,11 +8,9 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { hasConfiguredApiKey } from "../proxy-gateway/server/guards/api-key-auth.util";
 import {
   generateApiKey,
   hashApiKey,
-  hashesEqual,
   MIN_CUSTOM_KEY_LENGTH,
   previewApiKey,
 } from "./api-key-hash";
@@ -84,6 +81,26 @@ export class ApiKeyService implements OnModuleInit, OnModuleDestroy {
       });
     }, 30000);
     this.flushTimer.unref();
+
+    await this.ensureBootstrapAdminKey();
+  }
+
+  /**
+   * First-run bootstrap: if no active admin key exists, create one and show the
+   * plaintext exactly once in the logs. On every later boot this is a no-op, so a
+   * restart never mints a second admin key.
+   */
+  async ensureBootstrapAdminKey(): Promise<string | null> {
+    const admins = await this.apiKeyRepository.find({
+      where: { role: "admin", isActive: true },
+    });
+    if (admins.length > 0) return null;
+
+    const { key } = await this.createKey({ name: "Bootstrap admin", role: "admin" });
+    this.logger.warn(
+      `No admin API key existed. Generated a bootstrap admin key (shown once): ${key}`,
+    );
+    return key;
   }
 
   async onModuleDestroy(): Promise<void> {

@@ -26,8 +26,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onAuthed }) => {
     setError(null);
     try {
       const res = await api.validateKey(trimmed);
-      if (res.valid) {
+      if (res.valid && res.role === 'admin') {
         onAuthed(trimmed);
+      } else if (res.valid) {
+        // A valid client key may call the proxy, but never the admin dashboard.
+        setError(t('login.errorNotAdmin'));
       } else {
         setError(res.error || t('login.errorInvalid'));
       }
@@ -64,6 +67,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onAuthed }) => {
             </label>
             <input
               type="password"
+              data-testid="login-key-input"
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder={t('login.placeholder')}
@@ -73,7 +77,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onAuthed }) => {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+            <div
+              data-testid="login-error"
+              className="flex items-start gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs"
+            >
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -81,6 +88,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onAuthed }) => {
 
           <button
             type="submit"
+            data-testid="login-submit"
             disabled={loading}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-zinc-950 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
           >

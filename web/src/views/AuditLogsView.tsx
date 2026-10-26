@@ -1,18 +1,80 @@
-import React, { useState } from 'react';
-import type { AuditRecord } from '../types';
-import { Activity, RefreshCw, AlertCircle } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { api } from '../api/client';
+import type { ApiKeyItem, AuditRecord } from '../types';
+import { Activity, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { useTranslation } from '../i18n';
 
-interface AuditLogsViewProps {
-  logs: AuditRecord[];
-  onReload: () => void;
-  isLoading: boolean;
-}
-
-export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ logs, onReload, isLoading }) => {
+export const AuditLogsView: React.FC = () => {
   const { t } = useTranslation();
   const [filterModel, setFilterModel] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // Server-side filters. `from`/`to` are raw `datetime-local` strings so the
+  // inputs stay controlled; they are converted to epoch millis on fetch.
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [apiKeyId, setApiKeyId] = useState('');
+
+  const [logs, setLogs] = useState<AuditRecord[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
+  const [requestState, setRequestState] = useState<'loading' | 'ready'>('loading');
+  const [reloadToken, setReloadToken] = useState(0);
+
+  // A filter or refresh change starts a new fetch. The busy flag is adjusted
+  // during render (react.dev "adjust state during render") so the refetch
+  // effect never sets state synchronously.
+  const queryKey = `${from}|${to}|${apiKeyId}|${reloadToken}`;
+  const [prevQueryKey, setPrevQueryKey] = useState(queryKey);
+  if (prevQueryKey !== queryKey) {
+    setPrevQueryKey(queryKey);
+    setRequestState('loading');
+  }
+  const loading = requestState === 'loading';
+
+  // Load the API key list once for the filter dropdown.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getApiKeys()
+      .then((keys) => {
+        if (!cancelled) setApiKeys(keys || []);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Refetch whenever a server-side filter changes (or refresh is requested).
+  useEffect(() => {
+    let cancelled = false;
+    const params: { from?: number; to?: number; apiKeyId?: string } = {};
+    if (from) params.from = new Date(from).getTime();
+    if (to) params.to = new Date(to).getTime();
+    if (apiKeyId) params.apiKeyId = apiKeyId;
+
+    void api
+      .getAuditRequests(params)
+      .then((rows) => {
+        if (!cancelled) setLogs(rows);
+      })
+      .finally(() => {
+        if (!cancelled) setRequestState('ready');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [from, to, apiKeyId, reloadToken]);
+
+  const handleClearFilters = useCallback(() => {
+    setFrom('');
+    setTo('');
+    setApiKeyId('');
+    setFilterModel('');
+    setFilterStatus('all');
+  }, []);
 
   const filteredLogs = logs.filter((log) => {
     if (log.endpoint?.includes('/graphql')) {
@@ -42,17 +104,66 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ logs, onReload, is
         </div>
 
         <button
-          onClick={onReload}
-          disabled={isLoading}
+          onClick={() => setReloadToken((n) => n + 1)}
+          disabled={loading}
           className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs font-medium transition-all"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-purple-400' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-purple-400' : ''}`} />
           <span>{t('audit.refreshBtn')}</span>
         </button>
       </div>
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-200">
+          <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+            {t('audit.timeFrom')}
+          </span>
+          <input
+            type="datetime-local"
+            data-testid="audit-from"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="bg-transparent text-xs text-zinc-200 focus:outline-none [color-scheme:dark]"
+          />
+        </label>
+
+        <label className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-200">
+          <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+            {t('audit.timeTo')}
+          </span>
+          <input
+            type="datetime-local"
+            data-testid="audit-to"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="bg-transparent text-xs text-zinc-200 focus:outline-none [color-scheme:dark]"
+          />
+        </label>
+
+        <select
+          data-testid="audit-apikey-filter"
+          value={apiKeyId}
+          onChange={(e) => setApiKeyId(e.target.value)}
+          className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-purple-500"
+        >
+          <option value="">{t('audit.allApiKeys')}</option>
+          {apiKeys.map((key) => (
+            <option key={key.id} value={key.id}>
+              {key.name}
+            </option>
+          ))}
+        </select>
+
+        <button
+          data-testid="audit-clear-filters"
+          onClick={handleClearFilters}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-xl text-xs font-medium transition-all"
+        >
+          <X className="w-3.5 h-3.5" />
+          <span>{t('audit.clearFilters')}</span>
+        </button>
+
         <input
           type="text"
           placeholder={t('audit.filterPlaceholder')}
@@ -128,7 +239,11 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ logs, onReload, is
                         : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
 
                   return (
-                    <tr key={log.requestId} className="hover:bg-zinc-900/50 transition-colors">
+                    <tr
+                      key={log.requestId}
+                      data-testid="audit-row"
+                      className="hover:bg-zinc-900/50 transition-colors"
+                    >
                       <td className="py-3 px-4 text-zinc-400 text-[11px]">
                         {new Date(log.timestamp).toLocaleTimeString()}
                       </td>

@@ -58,8 +58,13 @@ export class UpstreamDispatcherService {
 
     for (const provider of pipeline) {
       if (provider === 'google') {
-        // If Google is the selected step in pipeline, return false to let Google flow handle it
-        return false;
+        const hasGoogle = this.accountLeaseService.getNextAccountForProvider('google', {
+          model: body.model,
+        });
+        if (hasGoogle) {
+          return false;
+        }
+        continue;
       }
 
       const account = this.accountLeaseService.getNextAccountForProvider(
@@ -154,7 +159,13 @@ export class UpstreamDispatcherService {
 
     for (const provider of pipeline) {
       if (provider === 'google') {
-        return false;
+        const hasGoogle = this.accountLeaseService.getNextAccountForProvider('google', {
+          model: body.model,
+        });
+        if (hasGoogle) {
+          return false;
+        }
+        continue;
       }
 
       const account = this.accountLeaseService.getNextAccountForProvider(

@@ -53,7 +53,7 @@ export function sanitizeAuditUrl(rawUrl: string): string {
   }
 
   const params = new URLSearchParams(query);
-  for (const key of [...params.keys()]) {
+  for (const key of params.keys()) {
     if (isSensitiveAuditKey(key)) {
       params.set(key, REDACTED);
     }
