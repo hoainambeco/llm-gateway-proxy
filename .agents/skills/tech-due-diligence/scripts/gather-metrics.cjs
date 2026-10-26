@@ -162,7 +162,7 @@ if (fs.existsSync(path.join(coverageDir, 'coverage-summary.json'))) {
       linesCovered: cov.total.lines.covered,
       linesTotal: cov.total.lines.total,
     };
-  } catch (e) {
+  } catch {
     metrics.tests.unit.coverage = null;
   }
 }

@@ -13,12 +13,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import 'reflect-metadata';
 import { isObservable } from 'rxjs';
-import { hashApiKey, hashesEqual } from '../modules/api-key/api-key-hash';
 import { ApiKeyService } from '../modules/api-key/api-key.service';
-import {
-  extractApiKeyToken,
-  hasConfiguredApiKey,
-} from '../modules/proxy-gateway/server/guards/api-key-auth.util';
+import { extractApiKeyToken } from '../modules/proxy-gateway/server/guards/api-key-auth.util';
 import { AccountLeaseService } from '../modules/proxy-gateway/server/modules/account-lease/account-lease.service';
 import { DEFAULT_MAX_FILE_BYTES } from '../modules/proxy-gateway/server/modules/files/file-store.types';
 import { OpenAIOperations } from '../modules/proxy-gateway/server/modules/openai/openai-operations.service';
@@ -29,7 +25,7 @@ import { logger } from '../shared/logging/logger';
 import { AppModule } from './app.module';
 
 import { ProxyConfig } from '@/modules/config/types';
-import { getServerConfig, setServerConfig } from './server-config';
+import { setServerConfig } from './server-config';
 
 let app: NestFastifyApplication | null = null;
 let currentPort: number = 0;

@@ -267,4 +267,8 @@ export class OAuthClientRegistryService {
 
     return resolved ? normalizeOAuthClientKey(resolved) : undefined;
   }
+
+  static resetStateForTesting(): void {
+    cachedOAuthClientRegistry = null;
+  }
 }

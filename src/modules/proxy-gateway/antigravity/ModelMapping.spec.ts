@@ -6,6 +6,10 @@ import {
   getAnthropicFamilyMappingKey,
   resolveModelRoute,
   updateDynamicForwardingRules,
+  getSupportedModels,
+  getPublicModelIdForDisplayName,
+  getAllDynamicModels,
+  getOpenAICompatibleModels,
 } from './ModelMapping';
 
 describe('ModelMapping', () => {
@@ -102,6 +106,69 @@ describe('ModelMapping', () => {
       updateDynamicForwardingRules('deprecated-model-x', 'new-model-y');
       const result = resolveModelRoute('deprecated-model-x', { 'deprecated-model-x': 'custom' }, {}, {});
       expect(result).toBe('new-model-y');
+    });
+
+    it('routes OpenAI gpt-4 series (o1, o3, classic gpt-4)', () => {
+      const openai = { 'gpt-4-series': 'gemini-3.1-pro-high' };
+      expect(resolveModelRoute('gpt-4', {}, openai, {})).toBe('gemini-3.1-pro-high');
+      expect(resolveModelRoute('o1-mini-2024-09-12', {}, openai, {})).toBe('gemini-3.1-pro-high');
+      expect(resolveModelRoute('o3-mini', {}, openai, {})).toBe('gemini-3.1-pro-high');
+    });
+
+    it('routes OpenAI gpt-4o/3.5 series (4o, turbo, mini)', () => {
+      const openai = { 'gpt-4o-series': 'gemini-3.7-flash-medium' };
+      expect(resolveModelRoute('gpt-4o', {}, openai, {})).toBe('gemini-3.7-flash-medium');
+      expect(resolveModelRoute('gpt-3.5-turbo', {}, openai, {})).toBe('gemini-3.7-flash-medium');
+      expect(resolveModelRoute('gpt-4-turbo', {}, openai, {})).toBe('gemini-3.7-flash-medium');
+    });
+
+    it('routes OpenAI gpt-5 series with fallback to gpt-4-series', () => {
+      const openaiGpt5 = { 'gpt-5-series': 'gemini-3.7-flash-high' };
+      expect(resolveModelRoute('gpt-5', {}, openaiGpt5, {})).toBe('gemini-3.7-flash-high');
+
+      const openaiFallback = { 'gpt-4-series': 'gemini-3.1-pro-high' };
+      expect(resolveModelRoute('gpt-5', {}, openaiFallback, {})).toBe('gemini-3.1-pro-high');
+    });
+
+    it('routes Anthropic series with fallback to exact mapping', () => {
+      const anthropicExact = { 'claude-3-haiku-20240307': 'custom-haiku-target' };
+      expect(resolveModelRoute('claude-3-haiku-20240307', {}, {}, anthropicExact)).toBe('custom-haiku-target');
+    });
+  });
+
+  describe('getSupportedModels & getPublicModelIdForDisplayName', () => {
+    it('returns supported models list', () => {
+      const models = getSupportedModels();
+      expect(models.length).toBeGreaterThan(0);
+      expect(models).toContain('gemini-3-flash');
+    });
+
+    it('looks up public model ID by display name or returns undefined', () => {
+      expect(getPublicModelIdForDisplayName(null)).toBeUndefined();
+      expect(getPublicModelIdForDisplayName('')).toBeUndefined();
+      expect(getPublicModelIdForDisplayName('Non Existent Model Display Name 12345')).toBeUndefined();
+    });
+  });
+
+  describe('getAllDynamicModels & getOpenAICompatibleModels', () => {
+    it('returns models including custom mapping and static fallback models', () => {
+      const dynamic = getAllDynamicModels({ 'my-custom-model': 'target' });
+      expect(dynamic).toContain('my-custom-model');
+      expect(dynamic.length).toBeGreaterThan(10);
+    });
+
+    it('returns raw models when onlyRawQuotaModels is true', () => {
+      const raw = getAllDynamicModels({}, ['raw-model-a', 'raw-model-b'], true);
+      expect(raw).toEqual(['raw-model-a', 'raw-model-b']);
+    });
+
+    it('filters out image models in getOpenAICompatibleModels unless onlyRawQuotaModels is true', () => {
+      const openAiModels = getOpenAICompatibleModels({}, ['text-model', 'image-model-xyz']);
+      expect(openAiModels).toContain('text-model');
+      expect(openAiModels).not.toContain('image-model-xyz');
+
+      const rawOpenAiModels = getOpenAICompatibleModels({}, ['image-model-xyz'], true);
+      expect(rawOpenAiModels).toContain('image-model-xyz');
     });
   });
 });

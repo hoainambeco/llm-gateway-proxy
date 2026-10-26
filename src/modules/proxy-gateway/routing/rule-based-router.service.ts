@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   RoutingConfig,
-  RoutingRule,
   UpstreamProviderTarget,
   UpstreamProviderType,
 } from './routing.types';

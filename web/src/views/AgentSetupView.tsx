@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import type { ModelEntry } from '../types';
 import { useTranslation } from '../i18n';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/toast-context';
 import {
   AGENT_FAMILIES,
   AGENT_PRESETS,

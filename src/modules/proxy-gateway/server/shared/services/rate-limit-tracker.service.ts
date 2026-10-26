@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isEmpty, isNumber, isString } from 'lodash-es';
 import { z } from 'zod';
 import { getQuotaModelFamilyId } from '@/modules/cloud-account/utils/quota-model-families';
 import { normalizeGeminiModelAlias } from '@/modules/proxy-gateway/antigravity/ModelMapping';
+import {
+  COOLDOWN_BUS_TOKEN,
+  CooldownBus,
+  NoopCooldownBus,
+} from './cooldown-bus';
 
 export enum RateLimitReason {
   QuotaExhausted = 'quota_exhausted',
@@ -426,6 +431,25 @@ export function shouldGraceRetry(delayMs: number): boolean {
 export class RateLimitTrackerService {
   private readonly lockoutByKey = new Map<string, RateLimitInfo>();
   private readonly failureCounts = new Map<string, FailureCountEntry>();
+  private readonly cooldownBus: CooldownBus;
+
+  constructor(
+    @Optional()
+    @Inject(COOLDOWN_BUS_TOKEN)
+    cooldownBus?: CooldownBus,
+  ) {
+    this.cooldownBus = cooldownBus ?? new NoopCooldownBus();
+    this.cooldownBus.subscribe((accountId, untilMs, model) => {
+      this.setLockoutUntil(
+        accountId,
+        untilMs,
+        RateLimitReason.RateLimitExceeded,
+        model,
+        false,
+        false,
+      );
+    });
+  }
 
   private buildLockoutKey(accountId: string, model?: string): string {
     if (!isEmpty(model?.trim() ?? '')) {
@@ -491,6 +515,7 @@ export class RateLimitTrackerService {
     reason: RateLimitReason,
     model?: string,
     preservesLongImageQuota = false,
+    broadcast = true,
   ): void {
     const now = Date.now();
     const rawRetryAfterSec = Math.max(2, Math.ceil((resetTimeMs - now) / 1000));
@@ -498,13 +523,18 @@ export class RateLimitTrackerService {
       ? rawRetryAfterSec
       : Math.min(MAX_LOCKOUT_SECONDS, rawRetryAfterSec);
     const key = !isEmpty(model?.trim() ?? '') ? this.buildLockoutKey(accountId, model) : accountId;
+    const finalResetTimeMs = now + retryAfterSec * 1000;
     this.lockoutByKey.set(key, {
-      resetTimeMs: now + retryAfterSec * 1000,
+      resetTimeMs: finalResetTimeMs,
       retryAfterSec,
       reason,
       model,
       preservesLongImageQuota,
     });
+
+    if (broadcast) {
+      void this.cooldownBus.publishCooldown(accountId, finalResetTimeMs, model);
+    }
   }
 
   restorePersistedLongImageLimit(entry: PersistedModelRateLimit): boolean {
@@ -649,6 +679,8 @@ export class RateLimitTrackerService {
       ? this.buildLockoutKey(params.accountId, params.model)
       : params.accountId;
     this.lockoutByKey.set(key, info);
+
+    void this.cooldownBus.publishCooldown(params.accountId, info.resetTimeMs, params.model);
 
     return info;
   }

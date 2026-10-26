@@ -17,8 +17,19 @@ export const AuditLogsView: React.FC = () => {
 
   const [logs, setLogs] = useState<AuditRecord[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [requestState, setRequestState] = useState<'loading' | 'ready'>('loading');
   const [reloadToken, setReloadToken] = useState(0);
+
+  // A filter or refresh change starts a new fetch. The busy flag is adjusted
+  // during render (react.dev "adjust state during render") so the refetch
+  // effect never sets state synchronously.
+  const queryKey = `${from}|${to}|${apiKeyId}|${reloadToken}`;
+  const [prevQueryKey, setPrevQueryKey] = useState(queryKey);
+  if (prevQueryKey !== queryKey) {
+    setPrevQueryKey(queryKey);
+    setRequestState('loading');
+  }
+  const loading = requestState === 'loading';
 
   // Load the API key list once for the filter dropdown.
   useEffect(() => {
@@ -43,14 +54,13 @@ export const AuditLogsView: React.FC = () => {
     if (to) params.to = new Date(to).getTime();
     if (apiKeyId) params.apiKeyId = apiKeyId;
 
-    setLoading(true);
     void api
       .getAuditRequests(params)
       .then((rows) => {
         if (!cancelled) setLogs(rows);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setRequestState('ready');
       });
 
     return () => {

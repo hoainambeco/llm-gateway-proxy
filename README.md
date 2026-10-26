@@ -64,6 +64,8 @@ The built-in web dashboard (served by the proxy itself) for managing accounts, r
 - **Ultra-lightweight & Headless**:
   - Pure Node.js & TypeScript built on NestJS & Fastify.
   - Deployable on Linux VPS, macOS, Windows, or Docker containers.
+- **Comprehensive Architecture Documentation**:
+  - Full request lifecycle, protocol mapping engine, account lease state machine, thought signature preservation, and clustering documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
@@ -442,3 +444,9 @@ aider --openai-api-base http://localhost:8045/v1 \
       --openai-api-key sk-ag-YOUR_API_KEY \
       --model openai/claude-3-7-sonnet
 ```
+
+---
+
+## Architecture & Internals
+
+For in-depth details on the request lifecycle, protocol mapping engine, account lease state machine, thought signature recovery, audit pipeline, and Redis multi-node clustering, see the [Architecture Guide](docs/ARCHITECTURE.md).

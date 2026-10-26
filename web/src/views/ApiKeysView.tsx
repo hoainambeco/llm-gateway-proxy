@@ -3,7 +3,7 @@ import type { Account, ApiKeyItem } from '../types';
 import { api } from '../api/client';
 import { Key, Plus, Trash2, Shield, Users } from 'lucide-react';
 import { useTranslation } from '../i18n';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/toast-context';
 
 interface ApiKeysViewProps {
   apiKeys: ApiKeyItem[];

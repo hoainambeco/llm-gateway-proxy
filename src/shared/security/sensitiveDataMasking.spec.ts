@@ -118,4 +118,36 @@ describe('safeStringifyPacket', () => {
     expect(() => safeStringifyPacket(packet)).not.toThrow();
     expect(safeStringifyPacket(packet)).toContain('[Circular]');
   });
+
+  it('redacts credentials in URLs (user:pass@host)', () => {
+    const sanitized = sanitizeObject({
+      upstreamUrl: 'https://admin:my-secret-pass@api.anthropic.com/v1/messages',
+    }) as { upstreamUrl: string };
+
+    expect(sanitized.upstreamUrl).toBe('https://[REDACTED]@api.anthropic.com/v1/messages');
+  });
+
+  it('redacts data URLs and summarizes bytes and mime type', () => {
+    const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    const sanitized = sanitizeObject({ image: dataUrl }) as { image: string };
+
+    expect(sanitized.image).toContain('[data URL redacted mime=image/png bytes=');
+  });
+
+  it('summarizes base64 fields such as base64 and image data', () => {
+    const base64Data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    const sanitizedWithMime = sanitizeObject({
+      mimeType: 'image/png',
+      data: base64Data,
+      base64: base64Data,
+    }) as { mimeType: string; data: string; base64: string };
+
+    expect(sanitizedWithMime.data).toContain('[base64 redacted mime=image/png bytes=');
+    expect(sanitizedWithMime.base64).toContain('[base64 redacted mime=image/png bytes=');
+
+    const sanitizedWithoutMime = sanitizeObject({
+      base64: base64Data,
+    }) as { base64: string };
+    expect(sanitizedWithoutMime.base64).toContain('[base64 redacted bytes=');
+  });
 });

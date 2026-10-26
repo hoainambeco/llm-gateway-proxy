@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/toast-context';
 import { useTranslation } from '../i18n';
 import type { Account } from '../types';
 
@@ -34,6 +34,9 @@ function formatResetCountdown(resetTime: string, resettingText: string, prefixTe
   }
   return prefixTemplate.replace('{time}', timeStr);
 }
+
+/** Module scope keeps `Date.now()` out of render — the email is minted only when an import is submitted. */
+const makeFallbackClaudeEmail = () => `claude-${Date.now()}@antigravity.proxy`;
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -414,7 +417,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onReload }
           await api.addAccount({
             provider: 'anthropic',
             auth_type: 'cli_oauth',
-            email: email.trim() || `claude-${Date.now()}@antigravity.proxy`,
+            email: email.trim() || makeFallbackClaudeEmail(),
             claudeAiOauth: {
               accessToken: oauthObj.accessToken || oauthObj.access_token,
               refreshToken: oauthObj.refreshToken || oauthObj.refresh_token,

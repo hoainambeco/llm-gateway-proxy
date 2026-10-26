@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-10-25T13:00:02.607Z",
+  "timestamp": "2026-10-25T16:25:22.204Z",
   "git": {
-    "totalCommits": 45,
+    "totalCommits": 46,
     "contributors": [
       {
-        "commits": 21,
+        "commits": 22,
         "author": "hoainambeco"
       },
       {
@@ -25,23 +25,23 @@
       }
     ],
     "distinctHumanAuthors": 1,
-    "topContributorRatio": "88.0%",
+    "topContributorRatio": "88.2%",
     "busFactor": 1
   },
   "loc": {
     "backend": {
-      "files": 277,
-      "lines": 50136
+      "files": 339,
+      "lines": 63133
     },
     "frontend": {
-      "files": 33,
-      "lines": 8604
+      "files": 34,
+      "lines": 8662
     },
     "tests": {
-      "files": 28,
-      "lines": 1652
+      "files": 29,
+      "lines": 1716
     },
-    "totalLines": 60392
+    "totalLines": 73511
   },
   "typecheck": {
     "success": true,
@@ -49,23 +49,23 @@
     "errors": 0
   },
   "lint": {
-    "warnings": 36,
+    "warnings": 0,
     "errors": 0,
-    "totalIssues": 36
+    "totalIssues": 0
   },
   "tests": {
     "unit": {
       "coverage": {
-        "lines": 30.98,
-        "statements": 30.97,
-        "functions": 27.3,
-        "branches": 18.81,
-        "linesCovered": 2044,
-        "linesTotal": 6596
+        "lines": 89.05,
+        "statements": 88.98,
+        "functions": 89.37,
+        "branches": 79.27,
+        "linesCovered": 6054,
+        "linesTotal": 6798
       },
-      "passed": 205,
+      "passed": 981,
       "failed": 0,
-      "total": 205
+      "total": 981
     },
     "e2e": {
       "passed": 27,
@@ -77,37 +77,18 @@
       "failed": 0,
       "total": 24
     },
-    "totalPassed": 256,
+    "totalPassed": 1032,
     "totalFailed": 0,
-    "totalCount": 256
+    "totalCount": 1032
   },
   "security": {
     "vulnerabilities": {
       "critical": 0,
-      "high": 1,
-      "moderate": 1,
-      "low": 1,
-      "total": 3
+      "high": 0,
+      "moderate": 0,
+      "low": 0,
+      "total": 0
     },
-    "advisories": [
-      {
-        "package": "fast-uri",
-        "severity": "moderate",
-        "title": "fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding",
-        "url": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg"
-      },
-      {
-        "package": "fastify",
-        "severity": "low",
-        "title": "fastify is vulnerable to header validation bypass via case-sensitive propertyNames",
-        "url": "https://github.com/advisories/GHSA-389g-gv7q-r4x8"
-      },
-      {
-        "package": "zod",
-        "severity": "high",
-        "title": "Zod can exhaust memory while validating oversized constrained collections",
-        "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
-      }
-    ]
+    "advisories": []
   }
 }

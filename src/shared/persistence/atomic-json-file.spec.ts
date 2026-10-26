@@ -106,5 +106,42 @@ describe('atomic-json-file (real filesystem, temp directory)', () => {
 
       expect(readJsonFileSync(filePath)).toEqual({ ok: true });
     });
+
+    it('cleans up temporary file and closes descriptor when writeFileAtomicSync encounters an error', () => {
+      const filePath = path.join(tempDir, 'fail-sync.txt');
+      const fsyncSpy = jest.spyOn(fs, 'fsyncSync').mockImplementationOnce(() => {
+        throw new Error('Simulated fsync failure');
+      });
+
+      expect(() => writeFileAtomicSync(filePath, 'sync fail')).toThrow('Simulated fsync failure');
+      fsyncSpy.mockRestore();
+
+      // No temp files or target files left behind
+      expect(fs.readdirSync(tempDir)).toEqual([]);
+    });
+
+    it('cleans up temporary file when renameSync throws in writeFileAtomicSync', () => {
+      const filePath = path.join(tempDir, 'fail-rename.txt');
+      const renameSpy = jest.spyOn(fs, 'renameSync').mockImplementationOnce(() => {
+        throw new Error('Simulated rename failure');
+      });
+
+      expect(() => writeFileAtomicSync(filePath, 'rename fail')).toThrow('Simulated rename failure');
+      renameSpy.mockRestore();
+
+      expect(fs.readdirSync(tempDir)).toEqual([]);
+    });
+
+    it('cleans up temporary file when writeFileAtomic encounters an error', async () => {
+      const filePath = path.join(tempDir, 'fail-async.txt');
+      const renameSpy = jest.spyOn(fs.promises, 'rename').mockImplementationOnce(() => {
+        return Promise.reject(new Error('Simulated async rename failure'));
+      });
+
+      await expect(writeFileAtomic(filePath, 'async fail')).rejects.toThrow('Simulated async rename failure');
+      renameSpy.mockRestore();
+
+      expect(fs.readdirSync(tempDir)).toEqual([]);
+    });
   });
 });

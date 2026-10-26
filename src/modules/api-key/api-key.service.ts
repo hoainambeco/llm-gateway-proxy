@@ -1,4 +1,3 @@
-import { getServerConfig } from "@/server/server-config";
 import {
   BadRequestException,
   Injectable,
@@ -9,11 +8,9 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { hasConfiguredApiKey } from "../proxy-gateway/server/guards/api-key-auth.util";
 import {
   generateApiKey,
   hashApiKey,
-  hashesEqual,
   MIN_CUSTOM_KEY_LENGTH,
   previewApiKey,
 } from "./api-key-hash";

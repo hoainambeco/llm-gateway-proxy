@@ -3,7 +3,7 @@ import { api, AUTH_UNAUTHORIZED_EVENT } from './api/client';
 import { clearAdminKey, getAdminKey, setAdminKey } from './api/keyStorage';
 import { Header } from './components/Header';
 import { Sidebar, type TabType } from './components/Sidebar';
-import { useToast } from './components/Toast';
+import { useToast } from './components/toast-context';
 import { useTranslation } from './i18n';
 import type {
   Account,

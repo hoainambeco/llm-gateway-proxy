@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { CloudAccount } from '@/modules/cloud-account/types';
 import { AnthropicChatRequest } from '@/modules/proxy-gateway/server/common/interfaces/request-interfaces';
 import { sanitizeAnthropicOfficialRequest } from './anthropic-model-helper';

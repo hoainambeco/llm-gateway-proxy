@@ -9,15 +9,9 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
 } from "@nestjs/common";
-import type { FastifyRequest } from "fastify";
 import { AdminGuard } from "../proxy-gateway/server/guards/admin.guard";
-import {
-  extractApiKeyToken,
-  type RequestHeaders,
-} from "../proxy-gateway/server/guards/api-key-auth.util";
 import { ApiKeyService } from "./api-key.service";
 import { CreateApiKeyDto, UpdateApiKeyDto } from "./dto/api-key.dto";
 import type { ApiKey } from "./entities/api-key.entity";

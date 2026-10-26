@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Route, Plus, Trash2, Edit2, Save, RefreshCw, Check, GripVertical } from 'lucide-react';
 import type { RoutingConfig, RoutingRule } from '../types';
 import { api } from '../api/client';
 import { useTranslation } from '../i18n';
-import { useToast } from '../components/Toast';
+import { useToast } from '../components/toast-context';
 import {
   DragList,
   type DragHandleProps,
@@ -77,22 +77,39 @@ export const RoutingView: React.FC = () => {
   const [rawJson, setRawJson] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const fetchConfig = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getRoutingConfig();
-      setConfig(data);
-      setRawJson(JSON.stringify(data, null, 2));
-    } catch (err: any) {
-      toast.error(t('routing.loadFailed', { message: err.message }));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // The initial load shows the spinner from the `loading` state initializer;
+  // `fetchConfig` only ever clears it (in `finally`, after the request settles),
+  // so the effect never sets state synchronously. `t` is deliberately not a
+  // dependency: a language toggle re-creates `t`, and depending on it would
+  // refetch (and clobber unsaved edits) on every toggle. The latest `t` is
+  // read through a ref instead, so an error toast is still translated at the
+  // time it fires.
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
+  const notifyLoadError = toast.error;
+  const fetchConfig = useCallback(
+    () =>
+      api
+        .getRoutingConfig()
+        .then((data) => {
+          setConfig(data);
+          setRawJson(JSON.stringify(data, null, 2));
+        })
+        .catch((err: any) => {
+          notifyLoadError(tRef.current('routing.loadFailed', { message: err.message }));
+        })
+        .finally(() => {
+          setLoading(false);
+        }),
+    [notifyLoadError],
+  );
 
   useEffect(() => {
-    fetchConfig();
-  }, []);
+    void fetchConfig();
+  }, [fetchConfig]);
 
   const handleOpenAdd = () => {
     setEditingIndex(null);

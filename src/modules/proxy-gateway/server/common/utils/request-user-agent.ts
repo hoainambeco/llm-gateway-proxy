@@ -24,21 +24,6 @@ interface UserAgentResolution {
 let cachedUserAgentResolution: UserAgentResolution | null = null;
 let pendingUserAgentResolution: Promise<UserAgentResolution> | null = null;
 
-function normalizeNonEmptyString(
-  value: string | null | undefined,
-): string | null {
-  if (!isString(value)) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  return trimmed;
-}
-
 function getPlatformTag(): string {
   switch (process.platform) {
     case 'win32':

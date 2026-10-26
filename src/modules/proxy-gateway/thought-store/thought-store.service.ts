@@ -1,6 +1,4 @@
 import { createHash, randomUUID } from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
 
 import type { ThoughtStoreConfig } from '@/modules/config/types';
 import { DEFAULT_APP_CONFIG } from '@/modules/config/types';
@@ -11,12 +9,10 @@ import type {
 import { getTrafficAuditRequestContext } from '@/modules/proxy-gateway/audit/traffic-audit-context';
 import { recordProxyThinkingFill } from '@/modules/proxy-gateway/server/common/proxy-response-timing';
 import { getServerConfig } from '@/server/server-config';
-import { logger } from '@/shared/logging/logger';
 import type { DatabaseRepairResult } from '../audit/traffic-audit.service';
 import {
   ThoughtSessionListSchema,
   ThoughtRecordSummaryListSchema,
-  ThoughtStoreStatsSchema,
   type ThoughtRecord,
   type ThoughtRecordInput,
   type ThoughtRecordSummary,
@@ -30,12 +26,8 @@ import {
 } from './thought-store.matching';
 import type { ThoughtStoreWorkerCommand } from './thought-store.worker-protocol';
 
-const THOUGHT_STORE_FILENAME = 'thinking-store.db';
 const PLACEHOLDER_SIGNATURE = 'skip_thought_signature_validator';
 const MIN_REAL_SIGNATURE_LENGTH = 50;
-const MAINTENANCE_INTERVAL_MS = 60 * 60 * 1000;
-const MAX_QUEUE_BYTES = 128 * 1024 * 1024;
-const MAX_QUEUE_COMMANDS = 256;
 export const HARD_MAX_THOUGHT_TURNS = 200;
 export const HARD_MAX_THOUGHT_SESSION_BYTES = 64 * 1024 * 1024;
 

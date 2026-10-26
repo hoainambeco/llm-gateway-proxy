@@ -44,9 +44,11 @@ describe('en/vi locale parity', () => {
       [enKeys, 'en'],
       [viKeys, 'vi'],
     ] as const) {
+      // Prefix each offender with its locale so a failure names both the
+      // locale and the diverging key.
       const emptyKeys = [...localeKeys.entries()]
-        .filter(([key, value]) => typeof value === 'string' && value.trim() === '')
-        .map(([key]) => key);
+        .filter(([, value]) => typeof value === 'string' && value.trim() === '')
+        .map(([key]) => `${localeName}.${key}`);
       expect(emptyKeys).toEqual([]);
     }
   });

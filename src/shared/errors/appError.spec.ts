@@ -129,6 +129,96 @@ describe('getAppErrorData', () => {
 
     expect(data?.metadata).toBeUndefined();
   });
+
+  describe('metadata normalization for specific error codes', () => {
+    it.each([
+      ['HINT_APP_TRANSLOCATION', { hint: 'HINT_APP_TRANSLOCATION' }],
+      ['HINT_KEYCHAIN_DENIED', { hint: 'HINT_KEYCHAIN_DENIED' }],
+      ['HINT_SIGN_NOTARIZE', { hint: 'HINT_SIGN_NOTARIZE' }],
+      ['null', { hint: null }],
+    ])('validates KEYCHAIN_UNAVAILABLE metadata with hint %s', (_, metadata) => {
+      const data = getAppErrorData({
+        appErrorCode: 'KEYCHAIN_UNAVAILABLE',
+        messageKey: 'APP_KEYCHAIN_UNAVAILABLE',
+        metadata,
+      });
+      expect(data?.metadata).toEqual(metadata);
+    });
+
+    it('returns undefined metadata for KEYCHAIN_UNAVAILABLE with invalid hint', () => {
+      const data = getAppErrorData({
+        appErrorCode: 'KEYCHAIN_UNAVAILABLE',
+        messageKey: 'APP_KEYCHAIN_UNAVAILABLE',
+        metadata: { hint: 'INVALID_HINT' },
+      });
+      expect(data?.metadata).toBeUndefined();
+    });
+
+    it.each([
+      ['HINT_APP_TRANSLOCATION', 'NO_MATCHING_KEY'],
+      ['HINT_KEYCHAIN_DENIED', 'PROVIDER_UNAVAILABLE'],
+      ['HINT_MANUAL_SIGN', 'NOT_INITIALIZED'],
+      ['HINT_RECOVERY', 'NO_MATCHING_KEY'],
+      [null, 'PROVIDER_UNAVAILABLE'],
+    ])('validates MASTER_KEY_UNAVAILABLE metadata with hint %s and reason %s', (hint, reason) => {
+      const metadata = { hint, reason, storedAccountCount: 2 };
+      const data = getAppErrorData({
+        appErrorCode: 'MASTER_KEY_UNAVAILABLE',
+        messageKey: 'APP_MASTER_KEY_UNAVAILABLE',
+        metadata,
+      });
+      expect(data?.metadata).toEqual(metadata);
+    });
+
+    it('returns undefined metadata for MASTER_KEY_UNAVAILABLE when reason or count is invalid', () => {
+      expect(
+        getAppErrorData({
+          appErrorCode: 'MASTER_KEY_UNAVAILABLE',
+          messageKey: 'APP_MASTER_KEY_UNAVAILABLE',
+          metadata: { hint: 'HINT_RECOVERY', reason: 'BAD_REASON', storedAccountCount: 1 },
+        })?.metadata,
+      ).toBeUndefined();
+
+      expect(
+        getAppErrorData({
+          appErrorCode: 'MASTER_KEY_UNAVAILABLE',
+          messageKey: 'APP_MASTER_KEY_UNAVAILABLE',
+          metadata: { hint: 'HINT_RECOVERY', reason: 'NO_MATCHING_KEY', storedAccountCount: 'not-a-number' },
+        })?.metadata,
+      ).toBeUndefined();
+
+      expect(
+        getAppErrorData({
+          appErrorCode: 'MASTER_KEY_UNAVAILABLE',
+          messageKey: 'APP_MASTER_KEY_UNAVAILABLE',
+          metadata: { hint: 'UNKNOWN_HINT', reason: 'NO_MATCHING_KEY', storedAccountCount: 1 },
+        })?.metadata,
+      ).toBeUndefined();
+    });
+
+    it('validates generic errors with HINT_RELOGIN or HINT_CLEAR_DATA', () => {
+      const reloginData = getAppErrorData({
+        appErrorCode: 'DATA_MIGRATION_FAILED',
+        messageKey: 'APP_DATA_MIGRATION_FAILED',
+        metadata: { hint: 'HINT_RELOGIN' },
+      });
+      expect(reloginData?.metadata).toEqual({ hint: 'HINT_RELOGIN' });
+
+      const clearData = getAppErrorData({
+        appErrorCode: 'DATA_MIGRATION_FAILED',
+        messageKey: 'APP_DATA_MIGRATION_FAILED',
+        metadata: { hint: 'HINT_CLEAR_DATA' },
+      });
+      expect(clearData?.metadata).toEqual({ hint: 'HINT_CLEAR_DATA' });
+
+      const invalidHintData = getAppErrorData({
+        appErrorCode: 'DATA_MIGRATION_FAILED',
+        messageKey: 'APP_DATA_MIGRATION_FAILED',
+        metadata: { hint: 'OTHER_HINT' },
+      });
+      expect(invalidHintData?.metadata).toBeUndefined();
+    });
+  });
 });
 
 describe('shouldReportErrorToSentry', () => {
