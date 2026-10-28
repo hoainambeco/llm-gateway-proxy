@@ -126,6 +126,14 @@ export function convertOpenAIToClaude(
       allowLocalVideoPaths: options.allowLocalVideoPaths,
     });
 
+    // Reasoning the client replays belongs ahead of the answer it preceded. OpenCode
+    // (and other OpenAI-compatible clients) send it as `reasoning_content`; without
+    // this the model starts the next turn without its own prior train of thought.
+    const replayedReasoning = msg.reasoning_content?.trim();
+    if (msg.role === 'assistant' && replayedReasoning) {
+      contentBlocks.unshift({ type: 'thinking', thinking: replayedReasoning });
+    }
+
     if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
       for (const toolCall of msg.tool_calls) {
         const functionName =
@@ -177,7 +185,7 @@ export function convertOpenAIToClaude(
           effort: request.thinking.effort,
         }
       : undefined,
-    max_tokens: request.max_tokens,
+    max_tokens: request.max_tokens ?? request.max_completion_tokens,
     temperature: request.temperature,
     top_p: request.top_p,
     presence_penalty: request.presence_penalty,

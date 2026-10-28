@@ -18,6 +18,8 @@ export interface OpenAIChatRequest {
   frequency_penalty?: number;
   seed?: number;
   max_tokens?: number;
+  /** OpenAI's newer name for the same limit; OpenCode sends this one by default. */
+  max_completion_tokens?: number;
   stream?: boolean;
   /** Ask the gateway to keep the completion so its GET route can replay it. */
   store?: boolean;
@@ -55,6 +57,12 @@ export interface OpenAIMessage {
   name?: string;
   tool_calls?: OpenAIToolCall[];
   tool_call_id?: string;
+  /**
+   * Reasoning the client replays from a previous assistant turn. OpenAI-compatible
+   * clients such as OpenCode echo it back, and dropping it loses the model's
+   * train of thought between turns.
+   */
+  reasoning_content?: string;
 }
 
 export interface OpenAIContentPart {
