@@ -42,4 +42,38 @@ test.describe('Analytics View', () => {
     // Preset buttons exist (e.g. 24 Hours, 7 Days)
     await expect(page.getByRole('button', { name: /24 hours|24 giờ/i })).toBeVisible();
   });
+
+  test('interacts with time range presets, switches chart metrics, and exports CSV', async ({ page }) => {
+    // 1. Click "7 Days" preset
+    const sevenDaysBtn = page.getByRole('button', { name: /7 days|7 ngày/i });
+    await sevenDaysBtn.click();
+    await expect(sevenDaysBtn).toHaveClass(/bg-emerald-600/);
+
+    // 2. Click "30 Days" preset
+    const thirtyDaysBtn = page.getByRole('button', { name: /30 days|30 ngày/i });
+    await thirtyDaysBtn.click();
+    await expect(thirtyDaysBtn).toHaveClass(/bg-emerald-600/);
+
+    // 3. Click "Custom" preset and verify custom date range inputs appear
+    const customBtn = page.getByRole('button', { name: /custom|tùy chọn/i });
+    await customBtn.click();
+    const dateInputs = page.locator('input[type="date"]');
+    await expect(dateInputs).toHaveCount(2);
+
+    // 4. Switch chart metric from Tokens to Requests
+    const requestsMetricBtn = page.getByRole('button', { name: /^requests$/i });
+    await requestsMetricBtn.click();
+    await expect(page.getByText(/request volume over time/i)).toBeVisible();
+
+    // 5. Switch back to Tokens metric
+    const tokensMetricBtn = page.getByRole('button', { name: /^tokens$/i });
+    await tokensMetricBtn.click();
+    await expect(page.getByText(/token usage over time/i)).toBeVisible();
+
+    // 6. Test Export CSV button and verify download is initiated
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: /export csv|xuất csv/i }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toContain('.csv');
+  });
 });
