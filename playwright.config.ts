@@ -21,7 +21,8 @@ export default defineConfig({
     // values parsed with `new Date(...)` land on the same instants regardless
     // of the host timezone.
     timezoneId: 'UTC',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   webServer: {
