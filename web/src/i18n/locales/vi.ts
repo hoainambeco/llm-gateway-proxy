@@ -37,6 +37,7 @@ export const vi: Translations = {
     audit: 'Traffic & Logs',
     routing: 'Routing Rules',
     agentSetup: 'Thêm vào Agent',
+    playground: 'Playground',
   },
   tabs: {
     dashboard: {
@@ -313,6 +314,10 @@ export const vi: Translations = {
     thinkingTag: 'Thinking',
     anthropicTag: 'Anthropic',
     geminiTag: 'Gemini Upstream',
+    emptyTitle: 'Chưa có Model khả dụng',
+    emptyDesc:
+      'Chưa phát hiện model nào. Vui lòng thêm tài khoản Google hoặc làm mới quota để khám phá các model khả dụng.',
+    goToAccounts: 'Chuyển đến Tài khoản',
   },
   agentSetup: {
     title: 'Thêm Model vào Agent',
@@ -447,5 +452,25 @@ export const vi: Translations = {
       oneYear: '1 Năm',
       custom: 'Tùy chọn ngày',
     },
+  },
+  playground: {
+    title: 'Playground Thử Nghiệm Model',
+    subtitle: 'Thử nghiệm model trực tiếp và xuất code sample sẵn sàng tích hợp',
+    modelSelect: 'Model',
+    systemPrompt: 'System Prompt',
+    systemPromptPlaceholder: 'Bạn là một trợ lý thông thái...',
+    userPromptPlaceholder: 'Nhập câu hỏi hoặc yêu cầu của bạn...',
+    parameters: 'Tham số',
+    temperature: 'Nhiệt độ (Temperature)',
+    maxTokens: 'Số token đầu ra tối đa',
+    stream: 'Phản hồi Stream',
+    send: 'Gửi',
+    sending: 'Đang tạo...',
+    clearChat: 'Xoá hội thoại',
+    codeSamples: 'Mã nguồn mẫu',
+    copyCode: 'Sao chép mã',
+    copied: 'Đã sao chép!',
+    latency: 'Độ trễ',
+    tokens: 'Tokens',
   },
 };

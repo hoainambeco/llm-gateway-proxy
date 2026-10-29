@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { getServerConfig } from "@/server/server-config";
 import {
   generateApiKey,
   hashApiKey,
@@ -86,11 +87,52 @@ export class ApiKeyService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * First-run bootstrap: if no active admin key exists, create one and show the
-   * plaintext exactly once in the logs. On every later boot this is a no-op, so a
-   * restart never mints a second admin key.
+   * First-run bootstrap: if an admin key is configured via environment (PROXY_API_KEY
+   * or INITIAL_ADMIN_KEY) or config, ensure it is registered in SQLite as an active admin key.
+   * Otherwise, if no active admin key exists in SQLite, automatically generate one and show
+   * the plaintext exactly once in the logs. On every later boot without an env key, this is a no-op.
    */
   async ensureBootstrapAdminKey(): Promise<string | null> {
+    const config = getServerConfig();
+    const envKey = (
+      config?.api_key ||
+      process.env.PROXY_API_KEY ||
+      process.env.INITIAL_ADMIN_KEY ||
+      ""
+    ).trim();
+
+    if (envKey) {
+      const keyHash = hashApiKey(envKey);
+      let existing = await this.apiKeyRepository.findOne({ where: { keyHash } });
+
+      if (!existing) {
+        const entity = this.apiKeyRepository.create({
+          name: "Master Key (.env)",
+          keyHash,
+          keyPreview: previewApiKey(envKey),
+          role: "admin",
+          isActive: true,
+          allowedAccountIds: null,
+          expiresAt: null,
+          lastUsedAt: null,
+        });
+        existing = await this.apiKeyRepository.save(entity);
+        this.logger.log(
+          `Registered admin API key from environment variable (ID: ${existing.id})`,
+        );
+      } else if (!existing.isActive || existing.role !== "admin") {
+        existing.isActive = true;
+        existing.role = "admin";
+        await this.apiKeyRepository.save(existing);
+        this.logger.log(
+          `Re-activated admin API key from environment variable (ID: ${existing.id})`,
+        );
+      }
+
+      this.keyCache.set(existing.keyHash, existing);
+      return envKey;
+    }
+
     const admins = await this.apiKeyRepository.find({
       where: { role: "admin", isActive: true },
     });

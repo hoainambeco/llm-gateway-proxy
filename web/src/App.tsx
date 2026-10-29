@@ -19,6 +19,7 @@ import { AuditLogsView } from './views/AuditLogsView';
 import { DashboardView } from './views/DashboardView';
 import { LoginView } from './views/LoginView';
 import { ModelsView } from './views/ModelsView';
+import { PlaygroundView } from './views/PlaygroundView';
 import { RoutingView } from './views/RoutingView';
 
 type AuthState = 'checking' | 'anon' | 'authed';
@@ -158,6 +159,10 @@ export function App() {
       title: t('tabs.models.title'),
       subtitle: t('tabs.models.subtitle'),
     },
+    playground: {
+      title: t('playground.title'),
+      subtitle: t('playground.subtitle'),
+    },
     'agent-setup': {
       title: t('tabs.agentSetup.title'),
       subtitle: t('tabs.agentSetup.subtitle'),
@@ -230,7 +235,17 @@ export function App() {
               )}
               {activeTab === 'routing' && <RoutingView />}
               {activeTab === 'models' && (
-                <ModelsView models={models} proxyPort={status?.port} />
+                <ModelsView
+                  models={models}
+                  proxyPort={status?.port}
+                  onNavigateTab={setActiveTab}
+                />
+              )}
+              {activeTab === 'playground' && (
+                <PlaygroundView
+                  models={models}
+                  defaultPort={status?.port}
+                />
               )}
               {activeTab === 'agent-setup' && (
                 <AgentSetupView

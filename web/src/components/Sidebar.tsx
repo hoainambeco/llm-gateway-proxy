@@ -18,6 +18,7 @@ export type TabType =
   | 'accounts'
   | 'routing'
   | 'models'
+  | 'playground'
   | 'agent-setup'
   | 'api-keys'
   | 'analytics'
@@ -37,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, statu
     { id: 'accounts' as TabType, label: t('navigation.accounts'), icon: Users },
     { id: 'routing' as TabType, label: t('navigation.routing') || 'Routing Rules', icon: Route },
     { id: 'models' as TabType, label: t('navigation.models'), icon: Cpu },
+    { id: 'playground' as TabType, label: t('navigation.playground'), icon: Sparkles },
     {
       id: 'agent-setup' as TabType,
       label: t('navigation.agentSetup'),

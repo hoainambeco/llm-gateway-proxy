@@ -52,6 +52,17 @@ function createMockRepo(initialKeys: any[] = []) {
 
 describe('ApiKeyService', () => {
   describe('ensureBootstrapAdminKey', () => {
+    const originalEnv = { ...process.env };
+
+    beforeEach(() => {
+      delete process.env.PROXY_API_KEY;
+      delete process.env.INITIAL_ADMIN_KEY;
+    });
+
+    afterEach(() => {
+      process.env = { ...originalEnv };
+    });
+
     it('creates one admin key when none exists', async () => {
       const { repo, store } = createMockRepo([]);
       const service = new ApiKeyService(repo as any);
@@ -66,7 +77,7 @@ describe('ApiKeyService', () => {
       expect(saved).toMatchObject({ name: 'Bootstrap admin', role: 'admin', isActive: true });
     });
 
-    it('does nothing when an active admin key exists', async () => {
+    it('does nothing when an active admin key exists and no env key is provided', async () => {
       const { repo, store } = createMockRepo([
         { id: 'admin-1', role: 'admin', isActive: true, keyHash: 'hash-admin' },
       ]);
@@ -74,6 +85,49 @@ describe('ApiKeyService', () => {
 
       await expect(service.ensureBootstrapAdminKey()).resolves.toBeNull();
       expect(store.size).toBe(1);
+    });
+
+    it('registers PROXY_API_KEY from environment as admin key when set', async () => {
+      process.env.PROXY_API_KEY = 'sk-custom-env-master-key-12345';
+      const { repo, store } = createMockRepo([]);
+      const service = new ApiKeyService(repo as any);
+      jest.spyOn((service as any).logger, 'log').mockImplementation(() => {});
+
+      const raw = await service.ensureBootstrapAdminKey();
+
+      expect(raw).toBe('sk-custom-env-master-key-12345');
+      expect(store.size).toBe(1);
+      const saved = Array.from(store.values())[0];
+      expect(saved).toMatchObject({
+        name: 'Master Key (.env)',
+        role: 'admin',
+        isActive: true,
+        keyHash: hashApiKey('sk-custom-env-master-key-12345'),
+      });
+    });
+
+    it('re-activates existing key if PROXY_API_KEY is present in DB but inactive', async () => {
+      const key = 'sk-custom-env-master-key-disabled';
+      process.env.PROXY_API_KEY = key;
+      const { repo, store } = createMockRepo([
+        {
+          id: 'admin-disabled',
+          name: 'Old Key',
+          keyHash: hashApiKey(key),
+          keyPreview: previewApiKey(key),
+          role: 'client',
+          isActive: false,
+        },
+      ]);
+      const service = new ApiKeyService(repo as any);
+      jest.spyOn((service as any).logger, 'log').mockImplementation(() => {});
+
+      const raw = await service.ensureBootstrapAdminKey();
+
+      expect(raw).toBe(key);
+      const updated = store.get('admin-disabled');
+      expect(updated.isActive).toBe(true);
+      expect(updated.role).toBe('admin');
     });
   });
 

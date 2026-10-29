@@ -16,4 +16,24 @@ describe('first-run admin bootstrap', () => {
       await server.close();
     }
   });
+
+  it('uses PROXY_API_KEY when provided in environment', async () => {
+    process.env.PROXY_API_KEY = 'sk-ag-test-bootstrap-env-key-999999999999';
+    try {
+      const server = await startTestServer({ seedKeys: false });
+      try {
+        const ds = await getStandaloneDataSource();
+        const admins = await ds.getRepository(ApiKey).find({ where: { role: 'admin' } });
+        await ds.destroy();
+        expect(admins).toHaveLength(1);
+        expect(admins[0].name).toBe('Master Key (.env)');
+        expect(admins[0].keyPreview).toBe('sk-ag-te...9999');
+        expect(admins[0].isActive).toBe(true);
+      } finally {
+        await server.close();
+      }
+    } finally {
+      delete process.env.PROXY_API_KEY;
+    }
+  });
 });

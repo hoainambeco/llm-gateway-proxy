@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import type { ModelEntry } from '../types';
-import { Cpu, Search, Copy, Check, Terminal, Brain, Sparkles, BookOpen } from 'lucide-react';
+import type { TabType } from '../components/Sidebar';
+import { Cpu, Search, Copy, Check, Terminal, Brain, Sparkles, BookOpen, ArrowRight } from 'lucide-react';
 import { useTranslation } from '../i18n';
 
 interface ModelsViewProps {
   models: ModelEntry[];
   proxyPort?: number;
+  onNavigateTab?: (tab: TabType) => void;
 }
 
-export const ModelsView: React.FC<ModelsViewProps> = ({ models, proxyPort = 8044 }) => {
+export const ModelsView: React.FC<ModelsViewProps> = ({
+  models,
+  proxyPort = 8044,
+  onNavigateTab,
+}) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -81,63 +87,97 @@ export const ModelsView: React.FC<ModelsViewProps> = ({ models, proxyPort = 8044
         </div>
       </div>
 
-      {/* Models Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filteredModels.map((model) => {
-          const isThinking =
-            model.id.includes('thinking') ||
-            model.id.includes('-high') ||
-            model.id.includes('-medium') ||
-            model.id.includes('-low') ||
-            model.id.includes('tiered');
+      {/* Models Grid or Empty State */}
+      {models.length === 0 ? (
+        <div className="p-12 text-center rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mx-auto text-teal-400">
+            <Cpu className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-zinc-100">{t('models.emptyTitle')}</h3>
+            <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+              {t('models.emptyDesc')}
+            </p>
+          </div>
+          <div className="pt-2">
+            {onNavigateTab ? (
+              <button
+                type="button"
+                onClick={() => onNavigateTab('accounts')}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-zinc-950 font-semibold text-xs transition-colors shadow-sm"
+              >
+                <span>{t('models.goToAccounts')}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <a
+                href="#accounts"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-zinc-950 font-semibold text-xs transition-colors shadow-sm"
+              >
+                <span>{t('models.goToAccounts')}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredModels.map((model) => {
+            const isThinking =
+              model.id.includes('thinking') ||
+              model.id.includes('-high') ||
+              model.id.includes('-medium') ||
+              model.id.includes('-low') ||
+              model.id.includes('tiered');
 
-          return (
-            <div
-              key={model.id}
-              className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-mono text-xs font-bold text-zinc-200 break-all">{model.id}</span>
-                  <button
-                    onClick={() => handleCopy(model.id)}
-                    className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all shrink-0"
-                    title={t('models.copyModelId')}
-                  >
-                    {copiedId === model.id ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5 text-zinc-400" />
+            return (
+              <div
+                key={model.id}
+                className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-mono text-xs font-bold text-zinc-200 break-all">{model.id}</span>
+                    <button
+                      onClick={() => handleCopy(model.id)}
+                      className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all shrink-0"
+                      title={t('models.copyModelId')}
+                    >
+                      {copiedId === model.id ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    {isThinking && (
+                      <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+                        <Brain className="w-3 h-3" />
+                        {t('models.thinkingTag')}
+                      </span>
                     )}
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  {isThinking && (
-                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
-                      <Brain className="w-3 h-3" />
-                      {t('models.thinkingTag')}
+                    {model.id.includes('claude') && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                        {t('models.anthropicTag')}
+                      </span>
+                    )}
+                    {model.id.includes('gemini') && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium">
+                        {t('models.geminiTag')}
+                      </span>
+                    )}
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400 font-mono">
+                      {model.owned_by}
                     </span>
-                  )}
-                  {model.id.includes('claude') && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-                      {t('models.anthropicTag')}
-                    </span>
-                  )}
-                  {model.id.includes('gemini') && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium">
-                      {t('models.geminiTag')}
-                    </span>
-                  )}
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400 font-mono">
-                    {model.owned_by}
-                  </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

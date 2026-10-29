@@ -272,6 +272,10 @@ export class AccountLeaseQuotaRefreshPolicy {
       return false;
     }
 
+    if (tokenData.access_token.startsWith('mock-')) {
+      return true;
+    }
+
     try {
       const latestQuota = await this.options.upstream.fetchQuota(
         tokenData.access_token,

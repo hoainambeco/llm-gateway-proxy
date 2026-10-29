@@ -23,18 +23,6 @@ const PUBLIC_MODEL_BY_DISPLAY_NAME = new Map(
   ]),
 );
 
-const PUBLIC_SUPPORTED_MODELS = [
-  ...Object.keys(PUBLIC_MODEL_PRESET_DISPLAY_NAMES),
-  'gemini-3.7-flash',
-  'gemini-3.7-flash-tiered',
-  'gemini-3.6-flash',
-  'gemini-3.6-flash-tiered',
-  'gemini-3.6-flash-low',
-  'gemini-3.6-flash-medium',
-  'gemini-3.6-flash-high',
-  'gemini-3-flash',
-] as const;
-
 const CLAUDE_TO_GEMINI: Record<string, string> = {
   // Directly supported models
   'claude-sonnet-4-6-thinking': 'claude-sonnet-4-6-thinking',
@@ -57,6 +45,7 @@ const CLAUDE_TO_GEMINI: Record<string, string> = {
   'gemini-3.1-pro-high': 'gemini-pro-agent',
   'gemini-pro-agent': 'gemini-pro-agent',
   'gemini-3-flash': 'gemini-3-flash',
+  'gemini-2.5-pro': 'gemini-2.5-pro',
 
   // Alias mappings
   'claude-sonnet-4-6': 'claude-sonnet-4-6-thinking',
@@ -108,7 +97,6 @@ const CLAUDE_TO_GEMINI: Record<string, string> = {
   'gemini-3-pro-low': 'gemini-3-pro-low',
   'gemini-3-pro-high': 'gemini-pro-agent',
   'gemini-2.5-flash': 'gemini-3-flash',
-  'gemini-2.5-pro': 'gemini-3.1-pro-high',
   'gemini-2.0-flash': 'gemini-3-flash',
   'gemini-2.0-flash-online': 'gemini-3-flash',
   'gemini-3-pro-image': 'gemini-3-pro-image',
@@ -116,20 +104,6 @@ const CLAUDE_TO_GEMINI: Record<string, string> = {
   'gemini-3-flash-image': 'gemini-3.1-flash-image',
   'internal-background-task': 'gemini-3-flash',
 };
-
-const DYNAMIC_IMAGE_BASE_MODEL = 'gemini-3-pro-image';
-const DYNAMIC_IMAGE_RESOLUTIONS = ['', '-2k', '-4k'];
-const DYNAMIC_IMAGE_RATIOS = ['', '-1x1', '-4x3', '-3x4', '-16x9', '-9x16', '-21x9'];
-const EXTRA_DYNAMIC_MODELS = [
-  'gemini-3.7-flash',
-  'gemini-3.7-flash-high',
-  'gemini-3.7-flash-medium',
-  'gemini-3.7-flash-low',
-  'gemini-3-flash',
-  'gemini-3.1-pro-high',
-  'gemini-3.1-pro-low',
-  'gemini-3.1-flash-image',
-];
 
 const DYNAMIC_MODEL_FORWARDING_RULES = new Map<string, string>();
 
@@ -162,7 +136,7 @@ const GEMINI_MODEL_ALIASES: Record<string, string> = {
 };
 
 export function getSupportedModels(): string[] {
-  return [...PUBLIC_SUPPORTED_MODELS];
+  return Array.from(getDynamicModelSpecs().keys());
 }
 
 export function getPublicModelIdForDisplayName(displayName: unknown): string | undefined {
@@ -218,39 +192,19 @@ export function getAllDynamicModels(
     return [...modelIds].sort();
   }
 
-  const shouldUseStaticFallback = modelIds.size === 0;
-
-  if (!shouldUseStaticFallback) {
-    for (const id of Array.from(modelIds)) {
-      if (/-(?:low|medium|high|extra-low)$/i.test(id)) {
-        continue;
-      }
-      if (isThinkingModel(id)) {
-        modelIds.add(`${id}-low`);
-        modelIds.add(`${id}-medium`);
-        modelIds.add(`${id}-high`);
-      }
+  for (const id of Array.from(modelIds)) {
+    if (/-(?:low|medium|high|extra-low)$/i.test(id)) {
+      continue;
     }
-  }
-
-  for (const modelId of getSupportedModels()) {
-    modelIds.add(modelId);
+    if (isThinkingModel(id)) {
+      modelIds.add(`${id}-low`);
+      modelIds.add(`${id}-medium`);
+      modelIds.add(`${id}-high`);
+    }
   }
 
   for (const customModelId of Object.keys(customMapping)) {
     modelIds.add(customModelId);
-  }
-
-  if (shouldUseStaticFallback) {
-    for (const resolution of DYNAMIC_IMAGE_RESOLUTIONS) {
-      for (const ratio of DYNAMIC_IMAGE_RATIOS) {
-        modelIds.add(`${DYNAMIC_IMAGE_BASE_MODEL}${resolution}${ratio}`);
-      }
-    }
-
-    for (const modelId of EXTRA_DYNAMIC_MODELS) {
-      modelIds.add(modelId);
-    }
   }
 
   return [...modelIds].filter((id) => !shouldHideDeprecatedModelFromList(id)).sort();

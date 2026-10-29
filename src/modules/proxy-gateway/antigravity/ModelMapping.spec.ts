@@ -11,6 +11,7 @@ import {
   getAllDynamicModels,
   getOpenAICompatibleModels,
 } from './ModelMapping';
+import { registerDynamicModelSpecs } from './ModelSpecs';
 
 describe('ModelMapping', () => {
   describe('mapClaudeModelToGemini', () => {
@@ -137,7 +138,14 @@ describe('ModelMapping', () => {
   });
 
   describe('getSupportedModels & getPublicModelIdForDisplayName', () => {
-    it('returns supported models list', () => {
+    it('returns supported models list from dynamic specs', () => {
+      registerDynamicModelSpecs({
+        'gemini-3-flash': {
+          max_output_tokens: 65536,
+          supports_thinking: true,
+          display_name: 'Gemini 3 Flash',
+        } as any,
+      });
       const models = getSupportedModels();
       expect(models.length).toBeGreaterThan(0);
       expect(models).toContain('gemini-3-flash');
@@ -151,10 +159,38 @@ describe('ModelMapping', () => {
   });
 
   describe('getAllDynamicModels & getOpenAICompatibleModels', () => {
-    it('returns models including custom mapping and static fallback models', () => {
+    it('returns ONLY provided dynamic models, thinking variants if applicable, and NOT hardcoded models', () => {
+      const dynamic = getAllDynamicModels({}, ['gemini-2.5-pro', 'custom-argon']);
+      expect(dynamic).toContain('gemini-2.5-pro');
+      expect(dynamic).toContain('custom-argon');
+      expect(dynamic).not.toContain('gemini-3.6-flash');
+      expect(dynamic).not.toContain('gemini-3.7-flash');
+      expect(dynamic).not.toContain('claude-sonnet-4-6-thinking');
+      for (const model of dynamic) {
+        expect(
+          model === 'gemini-2.5-pro' ||
+          model === 'custom-argon' ||
+          model.startsWith('gemini-2.5-pro-') ||
+          model.startsWith('custom-argon-')
+        ).toBe(true);
+      }
+    });
+
+    it('returns empty array when dynamicModelIds is empty or not provided and no custom mapping', () => {
+      expect(getAllDynamicModels({}, [])).toEqual([]);
+      expect(getAllDynamicModels({}, undefined)).toEqual([]);
+      expect(getAllDynamicModels()).toEqual([]);
+    });
+
+    it('includes custom mapping models in the result', () => {
+      const result = getAllDynamicModels({ 'my-custom-model': 'target' }, ['gemini-2.5-pro']);
+      expect(result).toContain('my-custom-model');
+      expect(result).toContain('gemini-2.5-pro');
+    });
+
+    it('returns models including custom mapping', () => {
       const dynamic = getAllDynamicModels({ 'my-custom-model': 'target' });
       expect(dynamic).toContain('my-custom-model');
-      expect(dynamic.length).toBeGreaterThan(10);
     });
 
     it('returns raw models when onlyRawQuotaModels is true', () => {

@@ -37,6 +37,7 @@ export const en: Translations = {
     audit: 'Traffic & Logs',
     routing: 'Routing Rules',
     agentSetup: 'Agent Setup',
+    playground: 'Playground',
   },
   tabs: {
     dashboard: {
@@ -313,6 +314,10 @@ export const en: Translations = {
     thinkingTag: 'Thinking',
     anthropicTag: 'Anthropic',
     geminiTag: 'Gemini Upstream',
+    emptyTitle: 'No Models Available',
+    emptyDesc:
+      'No models have been discovered yet. Add Google accounts or refresh quotas to discover available models.',
+    goToAccounts: 'Go to Accounts',
   },
   agentSetup: {
     title: 'Agent Setup',
@@ -447,5 +452,25 @@ export const en: Translations = {
       oneYear: '1 Year',
       custom: 'Custom Range',
     },
+  },
+  playground: {
+    title: 'Model Playground',
+    subtitle: 'Test models in real-time and export production-ready code samples',
+    modelSelect: 'Model',
+    systemPrompt: 'System Prompt',
+    systemPromptPlaceholder: 'You are a helpful assistant...',
+    userPromptPlaceholder: 'Type your prompt or question...',
+    parameters: 'Parameters',
+    temperature: 'Temperature',
+    maxTokens: 'Max Output Tokens',
+    stream: 'Stream Response',
+    send: 'Send',
+    sending: 'Generating...',
+    clearChat: 'Clear Chat',
+    codeSamples: 'Code Sample',
+    copyCode: 'Copy Code',
+    copied: 'Copied!',
+    latency: 'Latency',
+    tokens: 'Tokens',
   },
 };
