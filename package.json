@@ -40,7 +40,9 @@
     "test:playwright:server": "npm run build:all && tsx test/playwright/seed.ts && tsx test/playwright/serve.ts",
     "test:all": "npm test && npm run test:playwright",
     "test:unit:watch": "jest --config jest.config.cjs --watch",
-    "test:cov": "jest --config jest.config.cjs --coverage"
+    "test:cov": "jest --config jest.config.cjs --coverage",
+    "prepare": "husky",
+    "check:secrets": "node scripts/check-secrets.mjs"
   },
   "dependencies": {
     "@fastify/multipart": "^9.4.0",
@@ -75,7 +77,9 @@
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.13.4",
     "@types/ws": "^8.5.14",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
+    "lint-staged": "^17.6.0",
     "nock": "^14.0.17",
     "oxlint": "^1.85.0",
     "ts-jest": "^29.4.15",
