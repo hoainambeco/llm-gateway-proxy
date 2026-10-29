@@ -37,6 +37,7 @@ export interface Translations {
     audit: string;
     routing: string;
     agentSetup: string;
+    playground: string;
   };
   tabs: {
     dashboard: {
@@ -287,6 +288,9 @@ export interface Translations {
     thinkingTag: string;
     anthropicTag: string;
     geminiTag: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    goToAccounts: string;
   };
   agentSetup: {
     title: string;
@@ -411,5 +415,25 @@ export interface Translations {
       oneYear: string;
       custom: string;
     };
+  };
+  playground: {
+    title: string;
+    subtitle: string;
+    modelSelect: string;
+    systemPrompt: string;
+    systemPromptPlaceholder: string;
+    userPromptPlaceholder: string;
+    parameters: string;
+    temperature: string;
+    maxTokens: string;
+    stream: string;
+    send: string;
+    sending: string;
+    clearChat: string;
+    codeSamples: string;
+    copyCode: string;
+    copied: string;
+    latency: string;
+    tokens: string;
   };
 }

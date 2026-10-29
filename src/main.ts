@@ -8,19 +8,28 @@ import { logger } from './shared/logging/logger';
 
 async function run() {
   const port = parseInt(process.env.PORT || '8045', 10);
+  const apiKey = (
+    process.env.PROXY_API_KEY ||
+    process.env.INITIAL_ADMIN_KEY ||
+    ''
+  ).trim();
 
   const config: ProxyConfig = {
     ...DEFAULT_APP_CONFIG.proxy,
     enabled: true,
     port,
-    api_key: '',
+    api_key: apiKey,
     auto_start: true,
   };
 
   logger.info(`Starting LLM Gateway Proxy Standalone on port ${port}...`);
-  logger.info(
-    `Model requests require dynamic API keys managed via Dashboard or CLI.`,
-  );
+  if (apiKey) {
+    logger.info(`Admin API Key configured via environment variable.`);
+  } else {
+    logger.info(
+      `Model requests require dynamic API keys managed via Dashboard or CLI.`,
+    );
+  }
 
   const result = await bootstrapNestServer(config);
 

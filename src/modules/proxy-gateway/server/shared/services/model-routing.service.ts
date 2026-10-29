@@ -7,6 +7,7 @@ import {
   lookupGeminiModelAlias,
   normalizeGeminiModelAlias,
 } from '../../../antigravity/ModelMapping';
+import { getDynamicModelSpecs } from '../../../antigravity/ModelSpecs';
 import { getConfiguredModelMapping } from '@/modules/config/model-aliases';
 import { ModelRouteMissJournalService } from './model-route-miss-journal.service';
 
@@ -105,6 +106,15 @@ export class ModelRoutingService {
         normalizedModel,
         resolvedModel: normalizeGeminiModelAlias(customExactMapping[normalizedModel]),
         source: 'configured',
+      };
+    }
+
+    if (getDynamicModelSpecs().has(normalizedModel.toLowerCase())) {
+      return {
+        requestedModel: model,
+        normalizedModel,
+        resolvedModel: normalizedModel,
+        source: 'canonical',
       };
     }
 

@@ -14,8 +14,8 @@ type SpecsConfig = {
   aliases: Record<string, string>;
 };
 
-const DEFAULT_MAX_OUTPUT_TOKENS = 65535;
-const DEFAULT_THINKING_BUDGET = 24576;
+export const DEFAULT_MAX_OUTPUT_TOKENS = 65535;
+export const DEFAULT_THINKING_BUDGET = 24576;
 
 const SPECS = modelSpecsJson as SpecsConfig;
 
@@ -48,6 +48,13 @@ export function getDynamicModelSpecs(): ReadonlyMap<string, ModelSpec> {
   return DYNAMIC_SPECS;
 }
 
+/**
+ * Clear all dynamic model specifications (for resets and testing).
+ */
+export function clearDynamicModelSpecs(): void {
+  DYNAMIC_SPECS.clear();
+}
+
 export function resolveModelAlias(modelId: string): string {
   const normalized = modelId.trim();
   return SPECS.aliases[normalized] ?? normalized;
@@ -69,6 +76,10 @@ export function isThinkingModel(modelId: string): boolean {
     if (baseDynamic !== undefined) {
       return baseDynamic;
     }
+    const baseSpec = SPECS.models[resolveModelAlias(baseMatch[1])]?.is_thinking;
+    if (baseSpec !== undefined) {
+      return baseSpec;
+    }
   }
 
   const resolved = resolveModelAlias(modelId);
@@ -88,6 +99,10 @@ export function getMaxOutputTokens(modelId: string): number {
     if (isNumber(baseDynamic) && Number.isFinite(baseDynamic) && baseDynamic > 0) {
       return Math.floor(baseDynamic);
     }
+    const baseSpec = SPECS.models[resolveModelAlias(baseMatch[1])]?.max_output_tokens;
+    if (isNumber(baseSpec) && Number.isFinite(baseSpec) && baseSpec > 0) {
+      return Math.floor(baseSpec);
+    }
   }
 
   const resolved = resolveModelAlias(modelId);
@@ -101,6 +116,13 @@ export function getMaxOutputTokens(modelId: string): number {
 export function getThinkingBudget(modelId: string): number {
   const normalized = modelId.trim().toLowerCase();
 
+  // 1. Read from DYNAMIC_SPECS first for exact model name
+  const dynamic = DYNAMIC_SPECS.get(normalized)?.thinking_budget;
+  if (isNumber(dynamic) && Number.isFinite(dynamic) && dynamic >= 0) {
+    return Math.floor(dynamic);
+  }
+
+  // 2. Strip suffixes (-low, -medium, -high, -extra-low) to read base model dynamic spec (or static spec)
   const variantMatch = /^(.+)-(low|medium|high|extra-low)$/i.exec(normalized);
   if (variantMatch) {
     const base = variantMatch[1];
@@ -119,15 +141,13 @@ export function getThinkingBudget(modelId: string): number {
     }
   }
 
-  const dynamic = DYNAMIC_SPECS.get(normalized)?.thinking_budget;
-  if (isNumber(dynamic) && Number.isFinite(dynamic) && dynamic >= 0) {
-    return Math.floor(dynamic);
-  }
-
+  // 3. Static spec fallback for exact model name / resolved alias
   const resolved = resolveModelAlias(modelId);
   const fromSpec = SPECS.models[resolved]?.thinking_budget;
   if (isNumber(fromSpec) && Number.isFinite(fromSpec) && fromSpec >= 0) {
     return Math.floor(fromSpec);
   }
+
+  // 4. Safe default
   return DEFAULT_THINKING_BUDGET;
 }

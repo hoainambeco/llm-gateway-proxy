@@ -2,6 +2,10 @@ import { ModelRoutingService } from './model-routing.service';
 import { ModelRouteMissJournalService } from './model-route-miss-journal.service';
 import { setServerConfig } from '../../../../../server/server-config';
 import { updateDynamicForwardingRules } from '../../../antigravity/ModelMapping';
+import {
+  registerDynamicModelSpecs,
+  clearDynamicModelSpecs,
+} from '../../../antigravity/ModelSpecs';
 import type { ProxyConfig } from '@/modules/config/types';
 
 describe('ModelRoutingService', () => {
@@ -74,6 +78,33 @@ describe('ModelRoutingService', () => {
         resolvedModel: 'claude-sonnet-4-6-thinking',
         source: 'canonical',
       });
+    });
+
+    it('reports gemini-2.5-pro as canonical mapping to itself', () => {
+      expect(service.resolveModelRoute('gemini-2.5-pro')).toEqual({
+        requestedModel: 'gemini-2.5-pro',
+        normalizedModel: 'gemini-2.5-pro',
+        resolvedModel: 'gemini-2.5-pro',
+        source: 'canonical',
+      });
+    });
+
+    it('reports dynamically registered model from quota as canonical', () => {
+      registerDynamicModelSpecs({
+        argon: {
+          percentage: 100,
+          resetTime: '2026-10-28T00:00:00Z',
+          display_name: 'Argon Experimental',
+        },
+      });
+
+      expect(service.resolveModelRoute('argon')).toEqual({
+        requestedModel: 'argon',
+        normalizedModel: 'argon',
+        resolvedModel: 'argon',
+        source: 'canonical',
+      });
+      clearDynamicModelSpecs();
     });
 
     it('falls back to GEMINI_MODEL_ALIASES when not in CLAUDE_TO_GEMINI', () => {
