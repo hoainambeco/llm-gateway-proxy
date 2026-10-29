@@ -81,4 +81,71 @@ describe('Gemini proxy protocol', () => {
     expect(res.status).toBe(200);
     expect(res.body.candidates[0].content.parts[0].text).toBe('hi from gemini');
   });
+
+  it('proxies streaming content via POST /v1beta/models/:model:streamGenerateContent (TC-MAP-013)', async () => {
+    const sseReply =
+      'data: {"candidates":[{"content":{"parts":[{"text":"streaming from gemini"}],"role":"model"}}]}\n\n' +
+      'data: {"candidates":[{"content":{"parts":[]},"finishReason":"STOP"}],"usageMetadata":{"totalTokenCount":5}}\n\n';
+
+    nock('https://generativelanguage.googleapis.com')
+      .post('/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse')
+      .optionally()
+      .reply(200, sseReply, { 'Content-Type': 'text/event-stream' });
+
+    nock('https://cloudcode-pa.googleapis.com')
+      .post('/v1internal:streamGenerateContent')
+      .query({ alt: 'sse' })
+      .optionally()
+      .reply(200, sseReply, { 'Content-Type': 'text/event-stream' });
+
+    const res = await apiFetch(
+      server.baseUrl,
+      '/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse',
+      {
+        token: server.clientKey,
+        body: {
+          contents: [{ role: 'user', parts: [{ text: 'hi stream' }] }],
+        },
+      },
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('streaming from gemini');
+    expect(res.text).toContain('STOP');
+  });
+
+  it('supports authentication via x-goog-api-key header (TC-AUTH-011)', async () => {
+    const mockReply = {
+      candidates: [
+        {
+          content: { parts: [{ text: 'authenticated with goog header' }], role: 'model' },
+          finishReason: 'STOP',
+        },
+      ],
+    };
+
+    nock('https://generativelanguage.googleapis.com')
+      .post('/v1beta/models/gemini-2.5-flash:generateContent')
+      .optionally()
+      .reply(200, mockReply);
+
+    nock('https://cloudcode-pa.googleapis.com')
+      .post('/v1internal:generateContent')
+      .optionally()
+      .reply(200, mockReply);
+
+    const res = await apiFetch(
+      server.baseUrl,
+      '/v1beta/models/gemini-2.5-flash:generateContent',
+      {
+        headers: { 'x-goog-api-key': server.clientKey },
+        body: {
+          contents: [{ role: 'user', parts: [{ text: 'test goog key' }] }],
+        },
+      },
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.candidates[0].content.parts[0].text).toBe('authenticated with goog header');
+  });
 });

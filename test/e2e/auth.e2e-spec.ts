@@ -70,4 +70,41 @@ describe('admin surface', () => {
     });
     expect(res.status).toBe(401);
   });
+
+  describe('auth validation endpoint (POST /internal/auth/validate)', () => {
+    it('validates an admin key and returns role admin (TC-AUTH-004)', async () => {
+      const res = await apiFetch(server.baseUrl, '/internal/auth/validate', {
+        method: 'POST',
+        token: server.adminKey,
+      });
+      expect(res.status).toBe(200);
+      expect(res.body.valid).toBe(true);
+      expect(res.body.role).toBe('admin');
+    });
+
+    it('validates a client key and returns role client (TC-AUTH-006)', async () => {
+      const res = await apiFetch(server.baseUrl, '/internal/auth/validate', {
+        method: 'POST',
+        token: server.clientKey,
+      });
+      expect(res.status).toBe(200);
+      expect(res.body.valid).toBe(true);
+      expect(res.body.role).toBe('client');
+    });
+
+    it('returns valid: false for an invalid token (TC-AUTH-005)', async () => {
+      const res = await apiFetch(server.baseUrl, '/internal/auth/validate', {
+        method: 'POST',
+        token: 'sk-ag-invalid-key-token-12345',
+      });
+      expect(res.status).toBe(200);
+      expect(res.body.valid).toBe(false);
+      expect(res.body.error).toContain('Invalid API key');
+    });
+
+    it('rejects unauthenticated request to /internal/accounts (TC-AUTH-004)', async () => {
+      const res = await apiFetch(server.baseUrl, '/internal/accounts');
+      expect(res.status).toBe(401);
+    });
+  });
 });
