@@ -61,6 +61,24 @@ async function main(): Promise<void> {
       created_at: 1790812800000,
       last_used: 1790812800000,
       is_active: true,
+      token: {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        expiry_timestamp: 1890812800,
+        token_type: 'Bearer',
+      },
+      quota: {
+        models: {
+          'gemini-3-flash': {
+            percentage: 100,
+            resetTime: '2026-10-29T00:00:00Z',
+            display_name: 'Gemini 3 Flash',
+            supports_images: true,
+            supports_thinking: true,
+          },
+        },
+      },
     },
     {
       id: 'acc-disabled',
